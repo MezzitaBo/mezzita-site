@@ -115,10 +115,11 @@ def layout(meta, body):
 <a class="logo" href="/" aria-label="Mezzita, inicio">{LOGO}</a>
 <div class="capsule" data-nav-capsule><div class="glass-layer" aria-hidden="true"></div>
 <nav class="nav" aria-label="Principal"><span class="nav-lens" data-nav-lens aria-hidden="true"></span>{nav}</nav></div>
+<a class="btn btn-ghost hd-login" href="https://app.mezzita.com/login" aria-label="Ingresar a tu panel de Mezzita">Ingresar</a>
 <a class="btn btn-primary hd-cta" data-wa="{WA_DEFAULT}" href="https://wa.me/59162506518">Hablar por WhatsApp</a>
 <button class="burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Abrir menú"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M1 1h18M1 7h18M1 13h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
 </div>
-<nav class="mnav" id="mnav" aria-label="Menú móvil" hidden>{mnav}<a class="btn btn-primary" data-wa="{WA_DEFAULT}" href="https://wa.me/59162506518">Hablar por WhatsApp</a></nav>
+<nav class="mnav" id="mnav" aria-label="Menú móvil" hidden>{mnav}<a class="btn btn-ghost" href="https://app.mezzita.com/login">Ingresar a mi panel</a><a class="btn btn-primary" data-wa="{WA_DEFAULT}" href="https://wa.me/59162506518">Hablar por WhatsApp</a></nav>
 </header>
 <main id="main">
 {body}
@@ -126,7 +127,7 @@ def layout(meta, body):
 <footer class="ft"><div class="wrap">
 <div><a class="logo" href="/" aria-label="Mezzita, inicio">{LOGO}</a>
 <p style="margin-top:.8rem;max-width:22rem">Pedidos en mesa y delivery, cobrados por QR, para restaurantes, pizzerías, bares, cafés y heladerías de Bolivia. Del equipo detrás de Levisoft.</p></div>
-<div><h4>Sitio</h4><a href="/servicios/">Servicios</a><a href="/planes/">Precios</a><a href="/demo/">Demo de pedidos</a><a href="/experiencia/">Experiencia</a><a href="/diagnostico/">Radiografía de tu ficha</a><a href="/calculadora/">Calculadora de pérdida</a><a href="/empezar/">Qué necesitas entregar</a><a href="/blog/">Blog</a></div>
+<div><h4>Sitio</h4><a href="/servicios/">Servicios</a><a href="/planes/">Precios</a><a href="/demo/">Demo de pedidos</a><a href="/experiencia/">Experiencia</a><a href="/diagnostico/">Radiografía de tu ficha</a><a href="/calculadora/">Calculadora de pérdida</a><a href="/empezar/">Qué necesitas entregar</a><a href="/blog/">Blog</a><a href="https://app.mezzita.com/login">Ingresar a mi panel</a></div>
 <div><h4>Legal</h4><a href="/terminos/">Términos del servicio</a><a href="/privacidad/">Privacidad</a><a href="/cookies/">Cookies</a><a href="/garantias/">Garantías</a><a href="/assets/docs/contrato-modelo-mezzita.pdf" target="_blank" rel="noopener">Contrato modelo (PDF)</a></div>
 <div><h4>Hablemos</h4><a data-wa="Hola, quiero hablar con alguien del equipo de Mezzita." href="https://wa.me/59162506518">WhatsApp +591 62506518</a><a href="mailto:hola@mezzita.com">hola@mezzita.com</a><p class="muted" style="margin-top:.4rem">Tarija, Santa Cruz, La Paz, Cochabamba, Sucre, Potosí, Oruro, Beni y Pando.</p></div>
 <div><h4>Socios</h4><p class="muted">Cobros y facturación con CUCU.</p><a class="ft-levi" href="https://levisoft.pro" target="_blank" rel="noopener"><span class="muted">Ingeniería de</span><img src="/assets/logos/levisoft-logo-light.webp" alt="Levisoft" width="1825" height="393" loading="lazy"></a></div>
