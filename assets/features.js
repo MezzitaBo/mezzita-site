@@ -1,16 +1,18 @@
-/* Mezzita · secciones de funciones del inicio: WhatsApp con IA, plano y QR, la noche en números.
-   Cada una arranca al entrar en pantalla y se pausa fuera de ella. Con movimiento reducido no se toca nada:
-   el HTML ya trae el cuadro final. */
+/* Mezzita · mocks de funciones (inicio y /funciones/): WhatsApp con IA, plano y QR, números, cierre y campañas.
+   Cada uno arranca al entrar en pantalla, se pausa fuera de ella y se reproduce una vez por entrada.
+   Con movimiento reducido no se toca nada: el HTML ya trae el cuadro final. */
 (function(){
   'use strict';
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var EASE = 'cubic-bezier(.25,1,.5,1)';
+  var each = function(sel, fn){ [].forEach.call(document.querySelectorAll(sel), fn); };
+  var fmt = function(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); };
 
-  function watch(el, enter, leave, threshold){
+  function watch(el, enter, leave){
     if(!('IntersectionObserver' in window)){ enter(); return; }
     new IntersectionObserver(function(es){
       es.forEach(function(e){ if(e.isIntersecting) enter(); else if(leave) leave(); });
-    }, {threshold: threshold || .25}).observe(el);
+    }, {threshold: .2, rootMargin: '0px 0px -10% 0px'}).observe(el);
   }
 
   /* Mueve un nodo a otro contenedor y anima el salto desde donde estaba (FLIP). */
@@ -22,9 +24,18 @@
     if(node.animate) node.animate([{transform: 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px)'}, {transform: 'none'}], {duration: 420, easing: EASE});
   }
 
+  /* Cuenta de 0 al valor de data-count, una vez. */
+  function countUp(els){
+    [].forEach.call(els, function(el){
+      var end = +el.getAttribute('data-count'), t0 = null;
+      function frame(t){ if(!t0) t0 = t; var p = Math.min(1, (t - t0) / 900); el.textContent = fmt(end * (1 - Math.pow(1 - p, 3))); if(p < 1) requestAnimationFrame(frame); }
+      requestAnimationFrame(frame);
+    });
+  }
+
   /* ---------------------------------------------------------- WhatsApp con IA */
-  var wa = document.querySelector('.feat-wa');
-  if(wa && !reduce){
+  each('[data-wa-mock]', function(wa){
+    if(reduce) return;
     var chat = wa.querySelector('[data-wa-chat]'), board = wa.querySelector('[data-wa-board]');
     var bubs = [].slice.call(chat.querySelectorAll('.bub'));
     var card = board.querySelector('[data-wa-card]'), note = card.querySelector('[data-wa-note]');
@@ -36,9 +47,9 @@
     function stage(st, text){ moveTo(card, slot(st)); note.textContent = text; counts(); }
     function show(i){ if(typing.parentNode) typing.remove(); bubs[i].classList.add('on'); }
     function type(i){ chat.insertBefore(typing, bubs[i]); }
-    function setStamp(wait){ stamp.textContent = wait ? 'POR CONFIRMAR' : 'ACEPTADO'; stamp.classList.toggle('wait', wait); stamp.style.opacity = '1'; }
+    function setStamp(wait){ if(!stamp) return; stamp.textContent = wait ? 'POR CONFIRMAR' : 'ACEPTADO'; stamp.classList.toggle('wait', wait); stamp.style.opacity = '1'; }
+    function reset(){ bubs.forEach(function(b){ b.classList.remove('on'); }); card.classList.add('hide'); if(stamp) stamp.style.opacity = '0'; stage('nuevo', '¿Hacen delivery a Sopocachi?'); }
     var steps = [
-      [0, function(){ bubs.forEach(function(b){ b.classList.remove('on'); }); card.classList.add('hide'); stamp.style.opacity = '0'; stage('nuevo', '¿Hacen delivery a Sopocachi?'); }],
       [700, function(){ show(0); card.classList.remove('hide'); }],
       [900, function(){ type(1); }],
       [1300, function(){ show(1); stage('conversando', 'Responde la IA'); }],
@@ -52,24 +63,26 @@
       [600, function(){ type(7); }],
       [900, function(){ show(7); stage('pedido', 'Pedido 482 · Por confirmar'); setStamp(true); }],
       [2200, function(){ setStamp(false); note.textContent = 'Pedido 482 · Aceptado'; }],
-      [1800, function(){ show(8); stage('listo', 'Pedido 482 · Listo'); }],
-      [1800, function(){ show(9); stage('en_camino', 'Pedido 482 · En camino'); }],
-      [1800, function(){ stage('entregado', 'Pedido 482 · Entregado'); }],
-      [4200, null]
+      [1800, function(){ if(bubs[8]) show(8); stage('listo', 'Pedido 482 · Listo'); }],
+      [1800, function(){ if(bubs[9]) show(9); stage('en_camino', 'Pedido 482 · En camino'); }],
+      [1800, function(){ stage('entregado', 'Pedido 482 · Entregado'); }]
     ];
-    var i = 0, timer = null, running = false;
-    function tick(){ var s = steps[i]; if(s[1]) s[1](); i = (i + 1) % steps.length; timer = setTimeout(tick, steps[i][0]); }
-    function play(){ if(running) return; running = true; timer = setTimeout(tick, steps[i][0] || 300); }
+    var i = 0, timer = null, running = false, done = false;
+    function tick(){ steps[i][1](); i++; if(i < steps.length) timer = setTimeout(tick, steps[i][0]); else { running = false; done = true; } }
+    function play(){
+      if(running) return;
+      if(done){ reset(); i = 0; done = false; }
+      running = true; timer = setTimeout(tick, steps[i][0]);
+    }
     function pause(){ running = false; clearTimeout(timer); }
     wa.setAttribute('data-anim', '');
-    steps[0][1](); i = 1;
-    watch(wa.querySelector('.wa-grid'), play, pause, .3);
+    reset();
+    watch(wa.querySelector('[data-wa-chat]').closest('.phone'), play, pause);
     document.addEventListener('visibilitychange', function(){ if(document.hidden) pause(); });
-  }
+  });
 
   /* ---------------------------------------------------------- Plano por zonas */
-  var fp = document.querySelector('[data-fp]');
-  if(fp){
+  each('[data-fp]', function(fp){
     var lit = {};
     function liveChange(zone){
       if(reduce || lit[zone]) return;
@@ -79,31 +92,21 @@
     }
     function replay(){ fp.classList.remove('play'); void fp.getBoundingClientRect(); fp.classList.add('play'); }
     fp.addEventListener('click', function(e){
-      var b = e.target.closest('[data-zone]'); if(!b || b.tagName !== 'BUTTON') return;
+      var b = e.target.closest('button[data-zone]'); if(!b) return;
       var z = b.getAttribute('data-zone');
       fp.querySelectorAll('button[data-zone]').forEach(function(x){ x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
       fp.querySelectorAll('.fp-zone').forEach(function(g){ if(g.getAttribute('data-zone') === z) g.setAttribute('data-on', ''); else g.removeAttribute('data-on'); });
       if(!reduce){ replay(); liveChange(z); }
     });
-    if(!reduce){
-      fp.setAttribute('data-anim', '');
-      var seen = false;
-      watch(fp, function(){ if(seen) return; seen = true; fp.classList.add('play'); liveChange('salon'); }, null, .3);
-    }
-  }
+    if(reduce) return;
+    fp.setAttribute('data-anim', '');
+    var seen = false;
+    watch(fp, function(){ if(seen) return; seen = true; fp.classList.add('play'); liveChange(fp.querySelector('.fp-zone[data-on]').getAttribute('data-zone')); });
+  });
 
-  /* ---------------------------------------------------------- La noche en números */
-  var num = document.querySelector('[data-num]');
-  if(num){
-    var fmt = function(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); };
+  /* ---------------------------------------------------------- Panel en vivo */
+  each('[data-num]', function(num){
     var counted = false;
-    function countUp(){
-      [].forEach.call(num.querySelectorAll('[data-count]'), function(el){
-        var end = +el.getAttribute('data-count'), t0 = null;
-        function frame(t){ if(!t0) t0 = t; var p = Math.min(1, (t - t0) / 900); el.textContent = fmt(end * (1 - Math.pow(1 - p, 3))); if(p < 1) requestAnimationFrame(frame); }
-        requestAnimationFrame(frame);
-      });
-    }
     if(!reduce){
       num.setAttribute('data-anim', '');
       [].forEach.call(num.querySelectorAll('[data-count]'), function(el){ el.textContent = '0'; });
@@ -111,7 +114,29 @@
     watch(num, function(){
       num.classList.add('inview');
       if(reduce || counted) return;
-      counted = true; num.classList.add('play'); countUp();
-    }, function(){ num.classList.remove('inview'); }, .3);
-  }
+      counted = true; num.classList.add('play'); countUp(num.querySelectorAll('[data-count]'));
+    }, function(){ num.classList.remove('inview'); });
+  });
+
+  /* ---------------------------------------------------------- Cierre: la diferencia se marca una vez */
+  each('[data-close]', function(t){
+    if(reduce) return;
+    t.setAttribute('data-anim', '');
+    var seen = false;
+    watch(t, function(){ if(seen) return; seen = true; t.classList.add('play'); });
+  });
+
+  /* ---------------------------------------------------------- Campañas: un grupo se elige y la cuenta se asienta */
+  each('[data-camp]', function(c){
+    if(reduce) return;
+    var pick = c.querySelector('[data-pick]'), n = c.querySelectorAll('[data-count]');
+    c.setAttribute('data-anim', '');
+    pick.classList.remove('on');
+    [].forEach.call(n, function(el){ el.textContent = '0'; });
+    var seen = false;
+    watch(c, function(){
+      if(seen) return; seen = true;
+      setTimeout(function(){ pick.classList.add('on'); countUp(n); }, 500);
+    });
+  });
 })();
