@@ -48,7 +48,7 @@
     function stage(st, text, quiet){ moveTo(card, slot(st), quiet); note.textContent = text; counts(); }
     function show(i){ if(typing.parentNode) typing.remove(); bubs[i].classList.add('on'); }
     function type(i){ chat.insertBefore(typing, bubs[i]); }
-    function setStamp(wait){ if(!stamp) return; stamp.textContent = wait ? 'POR CONFIRMAR' : 'ACEPTADO'; stamp.classList.toggle('wait', wait); stamp.style.opacity = '1'; }
+    function setStamp(text){ if(!stamp) return; stamp.textContent = text; stamp.classList.toggle('wait', text === 'POR CONFIRMAR'); stamp.style.opacity = '1'; }
     function reset(){ bubs.forEach(function(b){ b.classList.remove('on'); }); card.classList.add('hide'); if(stamp) stamp.style.opacity = '0'; stage('nuevo', '¿Hacen delivery a Sopocachi?', true); }
     var steps = [
       [700, function(){ show(0); card.classList.remove('hide'); }],
@@ -62,11 +62,11 @@
       [1300, function(){ show(5); }],
       [1900, function(){ show(6); }],
       [600, function(){ type(7); }],
-      [900, function(){ show(7); stage('pedido', 'Pedido 482 · Por confirmar'); setStamp(true); }],
-      [2200, function(){ setStamp(false); note.textContent = 'Pedido 482 · Aceptado'; }],
-      [1800, function(){ stage('listo', 'Pedido 482 · Listo'); }],
-      [1800, function(){ stage('en_camino', 'Pedido 482 · En camino'); }],
-      [1800, function(){ stage('entregado', 'Pedido 482 · Entregado'); }]
+      [900, function(){ show(7); stage('pedido', 'Pedido 482 · Por confirmar'); setStamp('POR CONFIRMAR'); }],
+      [2200, function(){ setStamp('ACEPTADO'); note.textContent = 'Pedido 482 · Aceptado'; }],
+      [1800, function(){ stage('listo', 'Pedido 482 · Listo'); setStamp('LISTO'); }],
+      [1800, function(){ stage('en_camino', 'Pedido 482 · En camino'); setStamp('EN CAMINO'); }],
+      [1800, function(){ stage('entregado', 'Pedido 482 · Entregado'); setStamp('ENTREGADO'); }]
     ];
     var i = 0, timer = null, running = false, done = false, inview = false;
     function tick(){ steps[i][1](); i++; if(i < steps.length) timer = setTimeout(tick, steps[i][0]); else { running = false; done = true; } }
@@ -84,7 +84,7 @@
 
   /* ---------------------------------------------------------- Plano por zonas */
   each('[data-fp]', function(fp){
-    var lit = {};
+    var lit = {}, svg = fp.querySelector('.fp-svg'), label = svg.getAttribute('aria-label');
     function liveChange(zone){
       if(reduce || lit[zone]) return;
       lit[zone] = true;
@@ -97,6 +97,7 @@
       var z = b.getAttribute('data-zone');
       fp.querySelectorAll('button[data-zone]').forEach(function(x){ x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
       fp.querySelectorAll('.fp-zone').forEach(function(g){ if(g.getAttribute('data-zone') === z) g.setAttribute('data-on', ''); else g.removeAttribute('data-on'); });
+      svg.setAttribute('aria-label', 'Zona ' + b.textContent.trim() + '. ' + label);
       if(!reduce){ replay(); liveChange(z); }
     });
     if(reduce) return;
