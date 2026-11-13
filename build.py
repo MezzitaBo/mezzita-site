@@ -33,7 +33,7 @@ ORG = {"@context": "https://schema.org", "@type": "Organization", "@id": SITE + 
        "logo": SITE + "/assets/icon-512.png", "image": SITE + "/assets/og.jpg",
        "description": "Menú web propio con QR por mesa, delivery y recojo, cobro por QR bancario en el navegador y Panel de pedidos y caja para negocios de comida en Bolivia. Del equipo detrás de Levisoft.",
        "areaServed": {"@type": "Country", "name": "Bolivia"},
-       "address": {"@type": "PostalAddress", "addressLocality": "Tarija", "addressCountry": "BO"},
+       "address": {"@type": "PostalAddress", "addressLocality": "La Paz", "addressCountry": "BO"},
        "email": "hola@mezzita.com",
        "contactPoint": {"@type": "ContactPoint", "telephone": "+59162506518", "email": "hola@mezzita.com", "contactType": "sales", "availableLanguage": "es"}}
 WEBSITE = {"@context": "https://schema.org", "@type": "WebSite", "@id": SITE + "/#web", "url": SITE + "/", "name": "Mezzita",
@@ -129,9 +129,9 @@ def layout(meta, body):
 <p style="margin-top:.8rem;max-width:22rem">Pedidos en mesa y delivery, cobrados por QR, para restaurantes, pizzerías, bares, cafés y heladerías de Bolivia. Del equipo detrás de Levisoft.</p></div>
 <div><h4>Sitio</h4><a href="/servicios/">Servicios</a><a href="/planes/">Precios</a><a href="/demo/">Demo de pedidos</a><a href="/diagnostico/">Radiografía de tu ficha</a><a href="/calculadora/">Calculadora de pérdida</a><a href="/empezar/">Qué necesitas entregar</a><a href="/blog/">Blog</a><a href="https://app.mezzita.com/login">Ingresar a mi panel</a></div>
 <div><h4>Legal</h4><a href="/terminos/">Términos del servicio</a><a href="/privacidad/">Privacidad</a><a href="/cookies/">Cookies</a><a href="/garantias/">Garantías</a><a href="/assets/docs/contrato-modelo-mezzita.pdf" target="_blank" rel="noopener">Contrato modelo (PDF)</a></div>
-<div><h4>Hablemos</h4><a data-wa="Hola, quiero hablar con alguien del equipo de Mezzita." href="https://wa.me/59162506518">WhatsApp +591 62506518</a><a href="mailto:hola@mezzita.com">hola@mezzita.com</a><p class="muted" style="margin-top:.4rem">Tarija, Santa Cruz, La Paz, Cochabamba, Sucre, Potosí, Oruro, Beni y Pando.</p></div>
+<div><h4>Hablemos</h4><a data-wa="Hola, quiero hablar con alguien del equipo de Mezzita." href="https://wa.me/59162506518">WhatsApp +591 62506518</a><a href="mailto:hola@mezzita.com">hola@mezzita.com</a></div>
 <div><h4>Socios</h4><p class="muted">Cobros y facturación con CUCU.</p><a class="ft-levi" href="https://levisoft.pro" target="_blank" rel="noopener"><span class="muted">Ingeniería de</span><img src="/assets/logos/levisoft-logo-light.webp" alt="Levisoft" width="1825" height="393" loading="lazy"></a></div>
-<p class="legal">© <span data-year>2026</span> Mezzita · NIT en trámite de publicación · Tarija, Bolivia. Los resultados dependen de cada negocio, su rubro y su ciudad. Las garantías aplican según las condiciones escritas en tu contrato.</p>
+<p class="legal">© <span data-year>2026</span> Mezzita · NIT 6734852019 · La Paz, Bolivia. Los resultados dependen de cada negocio, su rubro y su ciudad. Las garantías aplican según las condiciones escritas en tu contrato.</p>
 </div></footer>
 <a class="wa-float" data-wa="Hola, vengo de la web de Mezzita." href="https://wa.me/59162506518" aria-label="Escribir por WhatsApp">{WA_ICON}<span>Escríbenos por WhatsApp</span></a>
 <div class="mbar"><a class="btn" data-wa="{WA_DEFAULT}" href="https://wa.me/59162506518">Hablar por WhatsApp</a><span class="mbar-sub">Te responde una persona · sin compromiso</span></div>
