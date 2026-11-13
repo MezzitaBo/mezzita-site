@@ -21,8 +21,8 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
 LOGO = '<img src="/assets/logo.svg" alt="Mezzita" width="1478" height="462">'
 MARK = '<img src="/assets/logo-mark.svg" alt="" width="518" height="417">'
 
-NAV = [("servicios", "/servicios/", "Servicios"), ("planes", "/planes/", "Precios"),
-       ("demo", "/demo/", "Demo"), ("experiencia", "/experiencia/", "Experiencia"), ("diagnostico", "/diagnostico/", "Radiografía gratis")]
+NAV = [("funciones", "/funciones/", "Funciones"), ("planes", "/planes/", "Precios"),
+       ("demo", "/demo/", "Demo"), ("diagnostico", "/diagnostico/", "Radiografía gratis")]
 
 WA_ICON = ('<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 1-2.3.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6-.3.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg>')
 
@@ -33,7 +33,7 @@ ORG = {"@context": "https://schema.org", "@type": "Organization", "@id": SITE + 
        "logo": SITE + "/assets/icon-512.png", "image": SITE + "/assets/og.jpg",
        "description": "Menú web propio con QR por mesa, delivery y recojo, cobro por QR bancario en el navegador y Panel de pedidos y caja para negocios de comida en Bolivia. Del equipo detrás de Levisoft.",
        "areaServed": {"@type": "Country", "name": "Bolivia"},
-       "address": {"@type": "PostalAddress", "addressLocality": "Tarija", "addressCountry": "BO"},
+       "address": {"@type": "PostalAddress", "addressLocality": "La Paz", "addressCountry": "BO"},
        "email": "hola@mezzita.com",
        "contactPoint": {"@type": "ContactPoint", "telephone": "+59162506518", "email": "hola@mezzita.com", "contactType": "sales", "availableLanguage": "es"}}
 WEBSITE = {"@context": "https://schema.org", "@type": "WebSite", "@id": SITE + "/#web", "url": SITE + "/", "name": "Mezzita",
@@ -127,11 +127,11 @@ def layout(meta, body):
 <footer class="ft"><div class="wrap">
 <div><a class="logo" href="/" aria-label="Mezzita, inicio">{LOGO}</a>
 <p style="margin-top:.8rem;max-width:22rem">Pedidos en mesa y delivery, cobrados por QR, para restaurantes, pizzerías, bares, cafés y heladerías de Bolivia. Del equipo detrás de Levisoft.</p></div>
-<div><h4>Sitio</h4><a href="/servicios/">Servicios</a><a href="/planes/">Precios</a><a href="/demo/">Demo de pedidos</a><a href="/experiencia/">Experiencia</a><a href="/diagnostico/">Radiografía de tu ficha</a><a href="/calculadora/">Calculadora de pérdida</a><a href="/empezar/">Qué necesitas entregar</a><a href="/blog/">Blog</a><a href="https://app.mezzita.com/login">Ingresar a mi panel</a></div>
+<div><h4>Sitio</h4><a href="/funciones/">Funciones</a><a href="/planes/">Precios</a><a href="/demo/">Demo de pedidos</a><a href="/diagnostico/">Radiografía de tu ficha</a><a href="/calculadora/">Calculadora de pérdida</a><a href="/empezar/">Qué necesitas entregar</a><a href="/blog/">Blog</a><a href="https://app.mezzita.com/login">Ingresar a mi panel</a></div>
 <div><h4>Legal</h4><a href="/terminos/">Términos del servicio</a><a href="/privacidad/">Privacidad</a><a href="/cookies/">Cookies</a><a href="/garantias/">Garantías</a><a href="/assets/docs/contrato-modelo-mezzita.pdf" target="_blank" rel="noopener">Contrato modelo (PDF)</a></div>
-<div><h4>Hablemos</h4><a data-wa="Hola, quiero hablar con alguien del equipo de Mezzita." href="https://wa.me/59162506518">WhatsApp +591 62506518</a><a href="mailto:hola@mezzita.com">hola@mezzita.com</a><p class="muted" style="margin-top:.4rem">Tarija, Santa Cruz, La Paz, Cochabamba, Sucre, Potosí, Oruro, Beni y Pando.</p></div>
+<div><h4>Hablemos</h4><a data-wa="Hola, quiero hablar con alguien del equipo de Mezzita." href="https://wa.me/59162506518">WhatsApp +591 62506518</a><a href="mailto:hola@mezzita.com">hola@mezzita.com</a></div>
 <div><h4>Socios</h4><p class="muted">Cobros y facturación con CUCU.</p><a class="ft-levi" href="https://levisoft.pro" target="_blank" rel="noopener"><span class="muted">Ingeniería de</span><img src="/assets/logos/levisoft-logo-light.webp" alt="Levisoft" width="1825" height="393" loading="lazy"></a></div>
-<p class="legal">© <span data-year>2026</span> Mezzita · NIT en trámite de publicación · Tarija, Bolivia. Los resultados dependen de cada negocio, su rubro y su ciudad. Las garantías aplican según las condiciones escritas en tu contrato.</p>
+<p class="legal">© <span data-year>2026</span> Mezzita · NIT 6734852019 · La Paz, Bolivia. Los resultados dependen de cada negocio, su rubro y su ciudad. Las garantías aplican según las condiciones escritas en tu contrato.</p>
 </div></footer>
 <a class="wa-float" data-wa="Hola, vengo de la web de Mezzita." href="https://wa.me/59162506518" aria-label="Escribir por WhatsApp">{WA_ICON}<span>Escríbenos por WhatsApp</span></a>
 <div class="mbar"><a class="btn" data-wa="{WA_DEFAULT}" href="https://wa.me/59162506518">Hablar por WhatsApp</a><span class="mbar-sub">Te responde una persona · sin compromiso</span></div>
@@ -444,7 +444,7 @@ def build():
     urls = "".join(f"<url><loc>{SITE}{BASE}{m['path']}</loc><lastmod>{lastmod(m)}</lastmod></url>" for m, _ in pages if not m.get("noindex"))
     open(os.path.join(ROOT, "dist", "sitemap.xml"), "w").write(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>')
-    open(os.path.join(ROOT, "dist", "_redirects"), "w").write("/casos /experiencia/ 301\n/casos/ /experiencia/ 301\n")  # Cloudflare Pages
+    open(os.path.join(ROOT, "dist", "_redirects"), "w").write("/experiencia / 301\n/experiencia/ / 301\n/casos / 301\n/casos/ / 301\n/servicios /funciones/ 301\n/servicios/ /funciones/ 301\n")  # Cloudflare Pages
     open(os.path.join(ROOT, "dist", "robots.txt"), "w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE}{BASE}/sitemap.xml\n")
     open(os.path.join(ROOT, "dist", "llms.txt"), "w", encoding="utf8").write(llms_txt(pages))
     print("ok:", ", ".join(m["path"] for m, _ in pages))
@@ -458,10 +458,10 @@ def llms_txt(pages):
     out = ["# Mezzita", "",
            "> Mezzita instala en negocios de comida de Bolivia un menú web propio donde el cliente pide y paga desde su celular: QR por mesa, delivery y recojo, cobro por QR bancario en el navegador y Panel de pedidos y caja. Es el equipo detrás de Levisoft, con diez años construyendo sitios y sistemas.", "",
            "## Producto y precio", "",
-           "- Producto: Pedidos con QR, para pizzerías, heladerías, restaurantes, bares, cafés y franquicias en Bolivia. Tres planes al mes: Arranca 400 Bs, Crece 600 Bs (QR por mesa y reservas) y Escala 900 Bs (hasta 3 sucursales, reporte avanzado, factura electrónica al costo, gerente de cuenta).",
+           "- Producto: Pedidos con QR, para pizzerías, heladerías, restaurantes, bares, cafés y franquicias en Bolivia. Tres planes al mes: Arranca 400 Bs, Crece 600 Bs (QR por mesa, plano de mesas, reservas e inventario por receta) y Escala 900 Bs (hasta 3 sucursales, factura electrónica al costo, gerente de cuenta). Para discotecas y eventos, Plan Noche, que se cotiza.",
            "- Instalación: 2.900 Bs hasta el 30 de noviembre de 2026; desde el 1 de diciembre de 2026, 3.500 Bs. Precios con IVA incluido.",
            "- Comisión: solo cuando el pago pasa por el sistema y se verifica solo. 0 % sobre lo cobrado en el local con el QR del propio negocio o en efectivo. Delivery y recojo: 6 % (Arranca), 5 % (Crece), 4 % (Escala). Mesa con cobro verificado, opcional: 4,5 % (Crece), 3,5 % (Escala). Incluye la comisión del procesador y no se aplica sobre el costo de envío.",
-           "- WhatsApp: avisos de estado del pedido incluidos; saldo inicial de promociones de 250 o 300 Bs (vence a los 90 días) y recargas a 1,5 Bs por mensaje, solo a clientes que dieron permiso.",
+           "- WhatsApp: tablero de chats y asistente con IA opcional que responde y arma pedidos; avisos de estado del pedido incluidos; saldo inicial de promociones de 250 o 300 Bs (vence a los 90 días) y recargas a 1,5 Bs por mensaje, solo a clientes que dieron permiso.",
            "- Permanencia: mes a mes con 30 días de aviso, o contrato de 12 meses con dominio .com e Instalación de vuelta (desde el mes 13, hasta 200 Bs por mes de descuento hasta cubrir la instalación).",
            "- Garantía: menú, QR y panel activos en 7 días hábiles o el primer mes es gratis.",
            "- No incluye: gestión de la ficha de Google Maps del negocio, repartidores ni impresora térmica.",
