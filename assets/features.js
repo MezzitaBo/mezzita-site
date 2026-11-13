@@ -16,8 +16,9 @@
   }
 
   /* Mueve un nodo a otro contenedor y anima el salto desde donde estaba (FLIP). */
-  function moveTo(node, slot){
+  function moveTo(node, slot, quiet){
     if(node.parentNode === slot) return;
+    if(quiet){ slot.appendChild(node); return; }
     var a = node.getBoundingClientRect();
     slot.appendChild(node);
     var b = node.getBoundingClientRect();
@@ -44,11 +45,11 @@
     typing.className = 'bub them on'; typing.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
     function slot(st){ return board.querySelector('[data-st="' + st + '"]'); }
     function counts(){ [].forEach.call(board.querySelectorAll('.wa-col'), function(c){ c.querySelector('.n').textContent = c.querySelector('.wa-slot').children.length; }); }
-    function stage(st, text){ moveTo(card, slot(st)); note.textContent = text; counts(); }
+    function stage(st, text, quiet){ moveTo(card, slot(st), quiet); note.textContent = text; counts(); }
     function show(i){ if(typing.parentNode) typing.remove(); bubs[i].classList.add('on'); }
     function type(i){ chat.insertBefore(typing, bubs[i]); }
     function setStamp(wait){ if(!stamp) return; stamp.textContent = wait ? 'POR CONFIRMAR' : 'ACEPTADO'; stamp.classList.toggle('wait', wait); stamp.style.opacity = '1'; }
-    function reset(){ bubs.forEach(function(b){ b.classList.remove('on'); }); card.classList.add('hide'); if(stamp) stamp.style.opacity = '0'; stage('nuevo', '¿Hacen delivery a Sopocachi?'); }
+    function reset(){ bubs.forEach(function(b){ b.classList.remove('on'); }); card.classList.add('hide'); if(stamp) stamp.style.opacity = '0'; stage('nuevo', '¿Hacen delivery a Sopocachi?', true); }
     var steps = [
       [700, function(){ show(0); card.classList.remove('hide'); }],
       [900, function(){ type(1); }],
@@ -63,11 +64,11 @@
       [600, function(){ type(7); }],
       [900, function(){ show(7); stage('pedido', 'Pedido 482 · Por confirmar'); setStamp(true); }],
       [2200, function(){ setStamp(false); note.textContent = 'Pedido 482 · Aceptado'; }],
-      [1800, function(){ if(bubs[8]) show(8); stage('listo', 'Pedido 482 · Listo'); }],
-      [1800, function(){ if(bubs[9]) show(9); stage('en_camino', 'Pedido 482 · En camino'); }],
+      [1800, function(){ stage('listo', 'Pedido 482 · Listo'); }],
+      [1800, function(){ stage('en_camino', 'Pedido 482 · En camino'); }],
       [1800, function(){ stage('entregado', 'Pedido 482 · Entregado'); }]
     ];
-    var i = 0, timer = null, running = false, done = false;
+    var i = 0, timer = null, running = false, done = false, inview = false;
     function tick(){ steps[i][1](); i++; if(i < steps.length) timer = setTimeout(tick, steps[i][0]); else { running = false; done = true; } }
     function play(){
       if(running) return;
@@ -77,8 +78,8 @@
     function pause(){ running = false; clearTimeout(timer); }
     wa.setAttribute('data-anim', '');
     reset();
-    watch(wa.querySelector('[data-wa-chat]').closest('.phone'), play, pause);
-    document.addEventListener('visibilitychange', function(){ if(document.hidden) pause(); });
+    watch(wa.querySelector('[data-wa-chat]').closest('.phone'), function(){ inview = true; play(); }, function(){ inview = false; pause(); });
+    document.addEventListener('visibilitychange', function(){ if(document.hidden) pause(); else if(inview) play(); });
   });
 
   /* ---------------------------------------------------------- Plano por zonas */
