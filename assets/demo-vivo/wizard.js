@@ -56,7 +56,7 @@
   function load() {
     var st = null;
     try { st = JSON.parse(sessionStorage.getItem(KEY) || 'null'); } catch (e) {}
-    if (st && st.q === location.search && st.A) {
+    if (st && st.q === location.search && st.A && idFromHash(location.hash)) {
       A = M.normalize(st.A);
       chosen = M.PLANS.indexOf(st.chosen) !== -1 ? st.chosen : null;
       nombre = typeof st.nombre === 'string' ? cleanName(st.nombre) : '';
@@ -156,7 +156,7 @@
     }
     if (mode !== 'init') {
       var top = root.getBoundingClientRect().top + window.scrollY - 96;
-      if (window.scrollY > top) window.scrollTo({ top: Math.max(0, top), behavior: reduce ? 'auto' : 'smooth' });
+      if (window.scrollY > top) window.scrollTo({ top: Math.max(0, top), behavior: reduce || id === 'armando' ? 'auto' : 'smooth' });
       var h = $('.mzw-title', screen(id));
       if (h) h.focus({ preventScroll: true });
     }
@@ -208,7 +208,7 @@
   function fail(err) {
     if (opened) return; // el shell ya está a la vista y muestra su propio error
     var msg = err && (err.userMessage || (err.name === 'DemoError' && err.message));
-    $('#mzw-fail-msg').textContent = msg || 'No pudimos abrir tu demo. Prueba de nuevo en un minuto.';
+    $('#mzw-fail-msg').textContent = msg || 'Prueba de nuevo en un minuto.';
     $('#mzw-fail').hidden = false;
     $('.mzw-building').classList.add('is-failed');
     $('[data-retry]').focus({ preventScroll: true });
@@ -262,7 +262,7 @@
       return;
     }
     if (t.hasAttribute('data-next')) {
-      if (!A.atiende.length) { $('#mzw-e3').hidden = false; $('.mzw-card', screen(3)).focus(); return; }
+      if (!A.atiende.length) { $('#mzw-e3').hidden = false; return; }
       return next();
     }
     if (t.hasAttribute('data-back')) return back();
