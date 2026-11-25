@@ -142,7 +142,7 @@
     return rows.map(function (row) {
       var a = DAYS[row.days[0]], b = DAYS[row.days[row.days.length - 1]];
       var label = row.days.length === 1 ? a : row.days.length === 2 ? a + ' y ' + b : a + ' a ' + b;
-      return { label: capital(label), text: row.text, days: row.days };
+      return { label: capital(label), text: row.text, ranges: row.text === 'Cerrado' ? ['Cerrado'] : row.text.split(' y '), days: row.days };
     });
   }
 
@@ -334,7 +334,9 @@
         var li = document.createElement('li');
         if (r.days.indexOf(today) !== -1) { li.className = 'is-today'; li.setAttribute('aria-current', 'date'); }
         var a = document.createElement('span'); a.textContent = r.label;
-        var b = document.createElement('span'); b.textContent = r.text;
+        var b = document.createElement('span');
+        r.ranges.forEach(function (t) { var x = document.createElement('span'); x.textContent = t; b.appendChild(x); });
+        b.setAttribute('aria-label', r.text);
         li.appendChild(a); li.appendChild(b); hl.appendChild(li);
       });
     }
