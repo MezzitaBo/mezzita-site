@@ -274,7 +274,7 @@
       guest: null, guestSub: null, team: ['owner'], mside: 'guest', full: '', tour: null, toastT: null, toastQ: [], pt: null,
       pulsing: false, expired: false, played: {}, welcomeSeen: false, ambientNext: 0, timers: [],
       // WhatsApp: messages per conversation {list, ids, cursor}, the one on the phone, the board as last pulsed
-      msgs: {}, view: 1, chats: [], stages: {}, follow: null, approved: {}, clockMs: 0, synced: false,
+      msgs: {}, view: 1, chats: [], stages: {}, follow: null, approved: {}, told: {}, clockMs: 0, synced: false,
     };
     var s = S;
     var h = host();
@@ -455,8 +455,11 @@
     S.root.setAttribute('data-full', '');
     layout();
 
+    var names = {};
+    (sb.wa_timeline || []).forEach(function (c) { names[c.conv] = c.guest_name; });
     S.phone = new phoneMod.Phone($('.mzd-wa'), {
       venue: sb.org && sb.org.name,
+      names: names,
       onPick: viewChat,
       onLink: openLink,
     });
@@ -543,21 +546,27 @@
     (r.did || []).forEach(function (d) {
       if (d.actor === 'cashier' && d.action === 'approve') S.approved[c.conv] = true;
     });
-    tell(r, c);
+    // a replayed beat answers its stored body (did included): tell it once
+    var k = c.conv + ':' + r.beat;
+    if (!S.told[k]) { S.told[k] = true; tell(r, c); }
     observe(null);
     schedulePulse(800);
   }
 
-  /** Toasts for what the demo did by itself (addendum §6), one at a time. */
+  /**
+   * Toasts for what the demo did by itself (addendum §6), one at a time. Not while a recorrido runs: its rail
+   * already says what is happening.
+   */
   function tell(r, c) {
-    var who = c ? String(c.guest_name || '').replace(/\.$/, '') : ''; // «Gabriel N.» ends its own sentence
+    if (S.tour && S.tour.active) return;
+    var who = c ? String(c.guest_name || '') : '';
     (r.did || []).forEach(function (d) {
       var n = d.ticket_number ? ' #' + d.ticket_number : '';
       var a = d.actor + ':' + d.action;
       if (a === 'guest:new_chat') toast('Nuevo chat de WhatsApp: ' + who, 'board');
       else if (a === 'assistant:order') toast('Pedido' + n + ' por WhatsApp: está en «Pedidos por confirmar».');
-      else if (a === 'assistant:reservation') toast('Nueva reserva por WhatsApp: ' + who + '.');
-      else if (a === 'assistant:handoff') toast(who + ' pide hablar con una persona: respóndele en el tablero.', 'board');
+      else if (a === 'assistant:reservation') toast('Nueva reserva por WhatsApp: ' + who);
+      else if (a === 'assistant:handoff') toast(who + ' pide hablar con una persona. Respóndele desde el tablero.', 'board');
       else if (a === 'cashier:approve') toast('Caja aceptó el pedido' + n + ' (automático en la demo)');
       else if (d.action === 'ready') toast((d.actor === 'bar' ? 'Barra marcó' : d.actor === 'kitchen_bar' ? 'Cocina y barra marcaron' : 'Cocina marcó') + ' listo el pedido' + n + ' (automático en la demo)');
       else if (a === 'cashier:dispatch') toast('El pedido' + n + ' salió en camino (automático en la demo)');
@@ -1096,6 +1105,8 @@
     if (!r) return;
     r.hidden = !show;
     S.root.setAttribute('data-tour', show ? 'on' : 'off');
+    // on phones the rail sits in the page flow: toasts stay above it
+    S.root.style.setProperty('--rail-h', show ? r.offsetHeight + 'px' : '0px');
   }
 
   return {

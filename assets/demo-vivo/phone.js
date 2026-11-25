@@ -57,11 +57,9 @@
     el.innerHTML =
       '<div class="mzp-hd"><span class="mzp-av" aria-hidden="true">' + esc(venue.trim().charAt(0).toUpperCase()) + '</span>' +
       '<span class="mzp-who"><b>' + esc(venue) + '</b><small>en línea</small></span></div>' +
-      '<label class="mzp-pick" hidden><span>Viendo el chat de:</span><select></select><i class="mzp-new" hidden aria-hidden="true"></i></label>' +
+      '<label class="mzp-pick" hidden><span>Viendo el chat de:</span><select></select><i class="mzp-new" hidden title="Hay chats con mensajes nuevos"></i></label>' +
       '<div class="mzp-chat" role="log" aria-live="polite" aria-label="Conversación de WhatsApp con ' + esc(venue) + '"></div>' +
-      '<div class="mzp-in"><input type="text" disabled aria-label="En la demo, tus clientes escriben solos." placeholder="En la demo, tus clientes escriben solos.">' +
-      '<button type="button" disabled aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true">' +
-      '<path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z" fill="currentColor"/></svg></button></div>';
+      '<div class="mzp-in"><input type="text" disabled aria-label="En la demo, tus clientes escriben solos." placeholder="En la demo, tus clientes escriben solos."></div>';
     this.chat = el.querySelector('.mzp-chat');
     this.pick = el.querySelector('.mzp-pick');
     this.select = el.querySelector('select');
@@ -78,7 +76,7 @@
   }
 
   Phone.prototype.intro = function () {
-    return '<p class="mzp-day">Hoy</p><p class="mzp-sys">Demo: estos mensajes no salen a ningún número.</p>';
+    return '<p class="mzp-day">Hoy</p><p class="mzp-sys">Chats de ejemplo, en vivo: tus clientes escriben solos. Nada sale a ningún número.</p>';
   };
 
   /** The chats that have written so far ([{conv, guest_name, stage, last_at}]). */
@@ -89,7 +87,10 @@
     var html = this.chats.map(function (c) {
       return '<option value="' + c.conv + '"' + (c.conv === cur ? ' selected' : '') + '>' + (news[c.conv] ? '● ' : '') + esc(c.guest_name) + '</option>';
     }).join('');
-    if (!this.chats.some(function (c) { return c.conv === cur; })) html = '<option value="' + cur + '" selected>…</option>' + html;
+    if (!this.chats.some(function (c) { return c.conv === cur; })) {
+      var name = (this.opts.names || {})[cur];
+      html = '<option value="' + cur + '" selected>' + (name ? esc(name) + ' · todavía no escribe' : 'Elige un chat') + '</option>' + html;
+    }
     if (this.select.innerHTML !== html) this.select.innerHTML = html;
     this.pick.hidden = !this.chats.length;
     this.dot.hidden = !Object.keys(news).some(function (k) { return news[k]; });

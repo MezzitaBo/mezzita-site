@@ -240,11 +240,12 @@ test("recorridos: «Mira tu WhatsApp trabajar solo» first when WhatsApp is on; 
 });
 
 test("recorrido «Un pedido por WhatsApp» follows conversation 1, or the next order chat that has not started", () => {
-  const tl = [{ conv: 1, kind: "order_pickup" }, { conv: 2, kind: "question" }, { conv: 3, kind: "order_delivery" }, { conv: 5, kind: "order_qr" }];
+  const tl = [{ conv: 1, kind: "order_pickup" }, { conv: 2, kind: "question" }, { conv: 3, kind: "order_delivery" }, { conv: 5, kind: "order_qr" }, { conv: 7, kind: "order_here" }];
   assert.equal(tours.pickFollow(tl, {}), 1);
   assert.equal(tours.pickFollow(tl, { 1: "nuevo" }), 1, "still in Nuevo lead: follow it");
   assert.equal(tours.pickFollow(tl, { 1: "conversando", 2: "nuevo" }), 3, "conversation 1 is past it; questions are skipped");
-  assert.equal(tours.pickFollow(tl, { 1: "entregado", 3: "pedido", 5: "listo" }), 1, "all past: back to 1");
+  assert.equal(tours.pickFollow(tl, { 1: "conversando", 3: "pedido" }), 7, "a QR order skips the cashier: not followed");
+  assert.equal(tours.pickFollow(tl, { 1: "entregado", 3: "pedido", 7: "listo" }), 1, "all past: back to 1");
   assert.equal(tours.rank("en_camino"), 5);
   assert.equal(tours.rank("no_relevante"), 7);
   assert.equal(tours.rank(undefined), 0);

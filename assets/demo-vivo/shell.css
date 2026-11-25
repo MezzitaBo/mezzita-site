@@ -181,8 +181,8 @@ html.mz-vivo .mzd,.mzd[data-layout="phone"]{top:0;z-index:70}
 @keyframes mzp-in{from{opacity:0;transform:translateY(6px)}}
 .mzd-toast .mzd-link{flex:none;padding:0 2px;color:var(--sun)}
 /* «Viendo el chat de»: which of the 12 guests the phone shows; a dot when another chat has news */
-.mzp-pick{flex:none;display:flex;align-items:center;gap:8px;padding:8px 12px;background:#F0F2F5;border-bottom:1px solid rgba(11,20,26,.08);font-size:13px;color:#54656F}
-.mzp-pick select{flex:1;min-width:0;height:36px;padding:0 8px;border:1px solid rgba(11,20,26,.14);border-radius:10px;background:#fff;font:600 14px var(--f-body);color:#111B21}
+.mzp-pick{flex:none;display:flex;align-items:center;gap:8px;padding:8px 12px;background:#F0F2F5;border-bottom:1px solid rgba(11,20,26,.08);font-size:14px;font-weight:500;color:#3B4A54}
+.mzp-pick select{flex:1;min-width:0;height:40px;padding:0 8px;border:1px solid rgba(11,20,26,.2);border-radius:10px;background:#fff;font:600 16px var(--f-body);color:#111B21}
 .mzp-new{flex:none;width:9px;height:9px;border-radius:50%;background:var(--wa)}
 .mzp-msg a{color:#027EB5;text-decoration:underline;overflow-wrap:anywhere}
 .mzp-in{flex:none;display:flex;align-items:center;gap:8px;padding:8px 10px 14px}
@@ -224,7 +224,10 @@ html.mz-vivo .mzd,.mzd[data-layout="phone"]{top:0;z-index:70}
 .mzd[data-layout="phone"] .mzd-rail-b{font-size:14.5px}
 .mzd[data-layout="phone"] .mzd-rail-acts{margin:0}
 .mzd[data-layout="phone"] .mzd-rail-acts>*{flex:1;min-height:44px;height:44px}
-.mzd[data-layout="phone"] .mzd-toast{top:8px;bottom:auto;left:12px;right:12px;max-width:none}
+.mzd[data-layout="phone"] .mzd-toast{top:auto;bottom:calc(var(--rail-h,0px) + 72px);left:12px;right:12px;max-width:none}
+.mzd[data-layout="phone"] .mzd-toast .mzd-link{min-height:44px;padding:0 8px}
+.mzd[data-layout="phone"] .mzd-tour{min-height:48px;padding:10px 12px}
+.mzd[data-layout="phone"] .mzd-tours{gap:6px;margin-top:12px}
 .mzd[data-layout="phone"] .mzd-mbar{display:flex;flex:none;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background:var(--night)}
 .mzd[data-layout="phone"] .mzd-mbar{gap:8px}
 .mzd-mbtn{appearance:none;flex:none;display:flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 18px;border:0;border-radius:12px;background:var(--sun);color:var(--ink);font:700 16px/1 var(--f-body);cursor:pointer}

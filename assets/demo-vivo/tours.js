@@ -136,7 +136,8 @@
    * its first steps, then the next order conversation that has not reached «En conversación» (addendum §7, L6).
    */
   function pickFollow(timeline, stages) {
-    var orders = (timeline || []).filter(function (c) { return /^order_/.test(c.kind); });
+    // order_qr is approved by its payment, never by the cashier: step 4 («acéptalo») would not fit it
+    var orders = (timeline || []).filter(function (c) { return /^order_/.test(c.kind) && c.kind !== 'order_qr'; });
     for (var i = 0; i < orders.length; i++) if (rank(stages[orders[i].conv]) < 2) return orders[i].conv;
     return orders.length ? orders[0].conv : 1;
   }
