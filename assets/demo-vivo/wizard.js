@@ -200,40 +200,56 @@
     return ok;
   }
 
-  /* ---------------------------------------------------------- abrir el demo */
+  /* ---------------------------------------------------------- abrir el demo
+     Contrato con shell.js (nota demo-shell-api.md): open() devuelve una promesa; el shell avisa con eventos en
+     document: mezzita-demo:open (toma la pantalla: el asistente se esconde), mezzita-demo:close (el visitante salió
+     del demo: vuelve el asistente). saved()/resume() reabren un demo vivo al recargar. */
+  function demo() { return window.MezzitaDemo || null; }
   function fail(err) {
-    $('#mzw-fail-msg').textContent = (err && err.userMessage) || 'No pudimos abrir tu demo. Prueba de nuevo en un minuto.';
+    if (opened) return; // el shell ya está a la vista y muestra su propio error
+    var msg = err && (err.userMessage || (err.name === 'DemoError' && err.message));
+    $('#mzw-fail-msg').textContent = msg || 'No pudimos abrir tu demo. Prueba de nuevo en un minuto.';
     $('#mzw-fail').hidden = false;
     $('.mzw-building').classList.add('is-failed');
     $('[data-retry]').focus({ preventScroll: true });
   }
-  function done(turn) {
-    if (turn !== building) {
-      if (window.MezzitaDemo && typeof window.MezzitaDemo.close === 'function') window.MezzitaDemo.close();
-      return;
-    }
+  /** El demo tomó la pantalla. */
+  function hideWizard() {
+    if (opened) return;
     building = 0;
     opened = true;
     root.hidden = true;
-    history.pushState({ mzw: 'demo', i: ++pos }, '', url('#demo'));
+    if (!(history.state && history.state.mzw === 'demo')) history.pushState({ mzw: 'demo', i: ++pos }, '', url('#demo'));
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
-  function openDemo(params) {
+  /** El visitante salió del demo: vuelve el asistente en el resultado. */
+  function showWizard(mode) {
+    building = 0;
+    if (!opened && !root.hidden) return;
+    opened = false;
+    root.hidden = false;
+    show('resultado', mode || 'replace');
+  }
+  function openDemo(params, resume) {
     last = params;
     if (cur !== 'armando') from = cur;
     show('armando');
     $('#mzw-fail').hidden = true;
     $('.mzw-building').classList.remove('is-failed');
-    track('demo_start', { template: params.template, plan: params.plan });
+    if (!resume) track('demo_start', { template: params.template, plan: params.plan });
     var turn = ++building;
-    var D = window.MezzitaDemo, res;
+    var D = demo(), res;
     if (!D || typeof D.open !== 'function') return fail();
-    try { res = D.open({ template: params.template, plan: params.plan, venues: params.venues, name: params.name }); }
-    catch (e) { return fail(e); }
+    try {
+      res = resume && typeof D.resume === 'function' ? D.resume()
+        : D.open({ template: params.template, plan: params.plan, venues: params.venues, name: params.name });
+    } catch (e) { return fail(e); }
     if (res && typeof res.then === 'function') {
-      res.then(function () { done(turn); }, function (e) { if (turn === building) fail(e); });
-    } else done(turn);
+      res.then(function () { if (turn === building) hideWizard(); }, function (e) { if (turn === building) fail(e); });
+    } else hideWizard();
   }
+  document.addEventListener('mezzita-demo:open', hideWizard);
+  document.addEventListener('mezzita-demo:close', function () { showWizard(); });
 
   /* ---------------------------------------------------------- eventos */
   root.addEventListener('click', function (e) {
@@ -284,24 +300,23 @@
     }
     if (opened) {
       opened = false;
-      if (window.MezzitaDemo && typeof window.MezzitaDemo.close === 'function') window.MezzitaDemo.close();
       root.hidden = false;
+      var D = demo();
+      if (D && typeof D.close === 'function') D.close();
     }
     show(id || firstOpen(), st ? 'pop' : 'replace');
   });
 
   /** Para que el demo pueda volver al asistente con las respuestas puestas. */
-  window.MezzitaWizard = {
-    show: function () {
-      opened = false;
-      root.hidden = false;
-      show('resultado', 'push');
-    }
-  };
+  window.MezzitaWizard = { show: function () { showWizard('push'); } };
 
   /* ---------------------------------------------------------- inicio */
   load();
   var start = idFromHash(location.hash);
-  show(start ? reachable(start) : firstOpen(), 'init');
+  var D0 = demo(), saved = null;
+  try { saved = D0 && typeof D0.saved === 'function' ? D0.saved() : null; } catch (e) {}
+  show(saved ? 'resultado' : start ? reachable(start) : firstOpen(), 'init');
   history.replaceState({ mzw: cur, i: 0 }, '', url(hashFor(cur)));
+  // Un demo vivo de esta pestaña (recarga): se reabre sin volver a preguntar.
+  if (saved) openDemo(saved, true);
 })();
