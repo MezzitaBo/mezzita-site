@@ -1,10 +1,10 @@
-<!--{"title":"Demo · Pide en el menú web como lo haría tu cliente","desc":"Arma el pedido en el menú web, elige mesa, recojo o delivery y paga con QR como lo haría tu cliente. Al lado, el Panel de pedidos y caja del dueño: el pedido entra pagado y la caja suma sola. Pizzería, heladería, restaurante, bar y café, franquicia.","path":"/demo/","nav":"demo","scripts":["order.js","demo.js"],"head":"<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&family=Sora:wght@500;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Gilda+Display&display=swap\">"}-->
+<!--{"title":"Demo · Pide en el menú web como lo haría tu cliente","desc":"Arma el pedido en el menú web, elige mesa, recojo o delivery y paga con QR como lo haría tu cliente. Al lado, el Panel de pedidos y caja del dueño: el pedido entra al panel y la caja confirma y suma cada pago. Pizzería, heladería, restaurante, bar y café, franquicia.","path":"/demo/","nav":"demo","scripts":["order.js","demo.js"],"head":"<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&family=Sora:wght@500;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Gilda+Display&display=swap\">"}-->
 <section class="wrap page-head">
   <div class="sec-head row" style="margin:0;align-items:end">
     <div class="hero-copy" style="max-width:42rem">
       <p class="callout"><span class="pill">Demo en vivo</span> Tú eres el cliente en la mesa 12</p>
       <h1 style="font-size:var(--step-4)">Pide en el menú web. Mira cómo llega a tu caja.</h1>
-      <p class="lede">Primero ves la página del negocio, como la ve tu cliente al escanear el QR de la mesa o al entrar desde Google. Luego, a la izquierda, eres el cliente en su celular: armas el pedido en el menú web, eliges mesa, recojo o delivery, y pagas con QR o al final con el mesero. A la derecha eres el dueño: el pedido entra a tu Panel de pedidos y caja con su mesa o dirección, y la caja suma sin revisar capturas.</p>
+      <p class="lede">Primero ves la página del negocio, como la ve tu cliente al escanear el QR de la mesa o al entrar desde Google. Luego, a la izquierda, eres el cliente en su celular: armas el pedido en el menú web, eliges mesa, recojo o delivery, y pagas con QR o al final con el mesero. A la derecha eres el dueño: el pedido entra a tu Panel de pedidos y caja con su mesa o dirección, y tu caja confirma y suma cada pago.</p>
     </div>
     <div class="tabs food-tabs" role="group" aria-label="Tipo de negocio de la demo">
       <button type="button" data-rubro="pizzeria" aria-pressed="true"><i class="fi" aria-hidden="true">{{icon:pizza}}</i>Pizzería</button>
@@ -43,24 +43,23 @@
         <div class="owner-kpis">
           <div><b class="num" id="o-total">0 Bs</b><span>vendido hoy</span></div>
           <div><b class="num" id="o-n">0</b><span>pedidos en cocina</span></div>
-          <div><b class="num" id="o-zero">0</b><span>capturas revisadas</span></div>
+          <div><b class="num" id="o-zero">0 %</b><span>de comisión</span></div>
         </div>
         <div class="o-com" id="o-com">
-          <div class="o-com-row"><span>Delivery y recojo · <b id="o-del-pct">6 % sobre la comida, con cobro verificado</b></span><b class="num" id="o-ours">0 Bs</b></div>
-          <div class="o-com-row"><span>Mesa con QR · <b id="o-mesa-pct">0 %, pagan con el QR de tu local</b></span><b class="num" id="o-mesa">0 Bs</b></div>
-          <div class="o-com-row"><span>Cobrado con tu QR o en efectivo · <b>0 % de comisión</b></span><b class="num" id="o-cash">0 Bs</b></div>
+          <div class="o-com-row"><span>Vendido en delivery y recojo · <b>0 % de comisión</b></span><b class="num" id="o-ours">0 Bs</b></div>
+          <div class="o-com-row"><span>Vendido en mesa con QR · <b>0 % de comisión</b></span><b class="num" id="o-mesa">0 Bs</b></div>
+          <div class="o-com-row"><span>Cobrado en caja · <b>0 % de comisión</b></span><b class="num" id="o-cash">0 Bs</b></div>
           <div class="o-com-row alt"><label for="o-pct">Si esos pedidos de delivery y recojo hubieran entrado por una app con comisión del</label><span class="o-pct-wrap"><input id="o-pct" type="number" inputmode="numeric" min="0" max="60" value="25"><b>%</b></span><span>(una estimación: revisa tu liquidación), la app se habría quedado con <b class="num" id="o-saved">0 Bs</b></span></div>
         </div>
-        <div class="owner-live" id="o-live"><p class="o-empty">Cuando tu cliente pague, el pedido aparece aquí con su mesa o su dirección. Sin preguntar, sin revisar comprobantes.</p></div>
+        <div class="owner-live" id="o-live"><p class="o-empty">Cuando tu cliente pida, el pedido aparece aquí con su mesa o su dirección, y tu caja confirma el pago.</p></div>
         <div class="owner-controls">
-          <div class="field"><label for="d-plan">Tu plan (cambia la comisión de cada pedido)</label><select id="d-plan"><option value="esencial">Arranca · 400 Bs al mes · 6 % en delivery y recojo</option><option value="salon">Crece · 600 Bs al mes · 5 % en delivery, 4,5 % en mesa con cobro verificado</option><option value="cadena">Escala · 900 Bs al mes · 4 % en delivery, 3,5 % en mesa con cobro verificado</option></select></div>
           <div class="field"><label for="d-deliv" id="d-deliv-label">¿Dónde está tu cliente y cómo paga? (también lo elige él en su celular)</label><select id="d-deliv"></select></div>
           <div class="cta-row">
             <button type="button" class="btn btn-sun" id="d-pay">Cobrar con QR</button>
             <a class="btn btn-ghost-dark" id="d-send" href="https://wa.me/59162506518" target="_blank" rel="noopener">Mandarnos este pedido de prueba</a>
             <button type="button" class="link-dark" id="d-reset">Empezar de nuevo</button>
           </div>
-          <p class="friction" style="color:var(--on-night-2)">Es una demo: no se cobra nada. En tu local, delivery y recojo se pagan con cobro por QR verificado antes de entrar a cocina. Cobramos comisión solo cuando el pago pasa por nuestro sistema y se verifica solo; si cobras con tu QR o en efectivo, 0 %. Los avisos de estado por WhatsApp vienen incluidos en todos los planes.</p>
+          <p class="friction" style="color:var(--on-night-2)">Es una demo: no se cobra nada. En tu local, tu cliente paga con el QR de tu banco o en efectivo, toca «Ya pagué» y tu caja confirma el pago. 0 % de comisión en todos los planes. Los avisos de estado por WhatsApp vienen incluidos en todos los planes.</p>
         </div>
       </div>
     </div>
@@ -81,7 +80,7 @@
 <section class="sec night"><div class="wrap split">
   <div class="sec-head" style="margin:0"><p class="eyebrow">¿Te gustó?</p><h2>Esto, con tu carta y tus fotos, en 7 días hábiles.</h2></div>
   <div style="display:grid;gap:1rem">
-    <p class="lede">Nos mandas tu carta y tus fotos. Te entregamos tu menú web, tus QR listos para imprimir y tu Panel de pedidos y caja activo. Instalación de 2.900 Bs hasta el 30 de noviembre, desde 400 Bs al mes y comisión solo cuando el pago pasa por nuestro sistema y se verifica solo: 6 % en delivery y recojo con Arranca. Con tu QR o en efectivo, 0 %.</p>
+    <p class="lede">Nos mandas tu carta y tus fotos. Te entregamos tu menú web, tus QR listos para imprimir y tu Panel de pedidos y caja activo. Instalación de {{precio:install}} Bs, desde 400 Bs al mes y 0 % de comisión, en la mesa, para llevar y a domicilio.</p>
     <div class="cta-row"><a class="btn btn-primary btn-lg btn-pulse" data-wa="Hola, probé la demo y quiero mi menú web con QR en las mesas. Mi local: ___ Ciudad: ___ Mesas: ___" href="https://wa.me/59162506518">Quiero mi menú web con QR</a><a class="link" href="/planes/">Ver la oferta completa</a></div>
 <p class="cta-sub"><span class="ok">✓</span>Te responde una persona · Sin compromiso · Pagas con QR</p>
   </div>
