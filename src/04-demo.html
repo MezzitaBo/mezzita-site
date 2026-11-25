@@ -1,87 +1,91 @@
-<!--{"title":"Demo · Pide en el menú web como lo haría tu cliente","desc":"Arma el pedido en el menú web, elige mesa, recojo o delivery y paga con QR como lo haría tu cliente. Al lado, el Panel de pedidos y caja del dueño: el pedido entra al panel y la caja confirma y suma cada pago. Pizzería, heladería, restaurante, bar y café, franquicia.","path":"/demo/","nav":"demo","scripts":["order.js","demo.js"],"head":"<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&family=Sora:wght@500;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Gilda+Display&display=swap\">"}-->
-<section class="wrap page-head">
-  <div class="sec-head row" style="margin:0;align-items:end">
-    <div class="hero-copy" style="max-width:42rem">
-      <p class="callout"><span class="pill">Demo en vivo</span> Tú eres el cliente en la mesa 12</p>
-      <h1 style="font-size:var(--step-4)">Pide en el menú web. Mira cómo llega a tu caja.</h1>
-      <p class="lede">Primero ves la página del negocio, como la ve tu cliente al escanear el QR de la mesa o al entrar desde Google. Luego, a la izquierda, eres el cliente en su celular: armas el pedido en el menú web, eliges mesa, recojo o delivery, y pagas con QR o al final con el mesero. A la derecha eres el dueño: el pedido entra a tu Panel de pedidos y caja con su mesa o dirección, y tu caja confirma y suma cada pago.</p>
-    </div>
-    <div class="tabs food-tabs" role="group" aria-label="Tipo de negocio de la demo">
-      <button type="button" data-rubro="pizzeria" aria-pressed="true"><i class="fi" aria-hidden="true">{{icon:pizza}}</i>Pizzería</button>
-      <button type="button" data-rubro="heladeria" aria-pressed="false"><i class="fi" aria-hidden="true">{{icon:helado}}</i>Heladería</button>
-      <button type="button" data-rubro="restaurante" aria-pressed="false"><i class="fi" aria-hidden="true">{{icon:plato}}</i>Restaurante</button>
-      <button type="button" data-rubro="bar" aria-pressed="false"><i class="fi" aria-hidden="true">{{icon:copa}}</i>Bar y café</button>
-      <button type="button" data-rubro="franquicia" aria-pressed="false"><i class="fi" aria-hidden="true">{{icon:burger}}</i>Franquicia</button>
-    </div>
+<!--{"title":"Demo en vivo · El sistema completo de Mezzita con datos de ejemplo","desc":"Elige tu tipo de negocio y abre el sistema completo con datos de ejemplo: caja, mesas, cocina, inventario, clientes y WhatsApp. Para restaurantes, cafés, pizzerías, food trucks, heladerías, bares, discotecas y eventos. 0 % de comisión.","path":"/demo/","nav":"demo","scripts":["demo-vivo/api.js","demo-vivo/phone.js","demo-vivo/tours.js","demo-vivo/shell.js","demo-vivo/mapping.js","demo-vivo/wizard.js"],"head":"<link rel=\"stylesheet\" href=\"/assets/demo-vivo/wizard.css\"><link rel=\"stylesheet\" href=\"/assets/demo-vivo/shell.css\">"}-->
+<div class="mzw-page">
+<section class="wrap mzw" id="demo-wizard" aria-label="Demo en vivo">
+  <div class="mzw-top">
+    <p class="mzw-kicker"><span class="pill">Demo en vivo</span> <span class="mzw-count" id="mzw-count">Paso 1 de 4</span></p>
+    <button type="button" class="mzw-skip link" data-skip>Saltar y ver el demo de un restaurante</button>
   </div>
-</section>
+  <div class="mzw-bar" aria-hidden="true"><i id="mzw-bar"></i></div>
 
-<section class="wrap" style="padding-bottom:0">
-  <div class="demoweb">
-    <p class="step"><span class="pill" style="margin-right:.5rem">Paso 1</span> Tu cliente escanea el QR de la mesa, o llega a tu página desde Google o Instagram</p>
-    <div class="frame"><div class="frame-bar"><i></i><i></i><i></i><span id="m-url">pizzerialaesquina.bo</span></div>
-      <div class="mocksite" id="mocksite"></div>
+  <noscript><p class="mzw-noscript">El demo en vivo necesita JavaScript. Actívalo en tu navegador o escríbenos por WhatsApp y te lo mostramos.</p></noscript>
+
+  <div class="mzw-step" data-step="1">
+    <h1 class="mzw-title" id="mzw-t1" tabindex="-1">¿En qué negocio quieres ver el demo?</h1>
+    <p class="mzw-sub" id="mzw-s1">Abrimos el sistema completo con datos de ejemplo de un negocio como el tuyo.</p>
+    <div class="mzw-cards mzw-cards-4" role="group" aria-labelledby="mzw-t1" aria-describedby="mzw-s1">
+      <button type="button" class="mzw-card" data-key="rubro" data-val="cafe" aria-pressed="false"><span class="mzw-ic">{{icon:cafe}}</span><span class="mzw-ct"><b>Restaurante pequeño o café</b><span>Mostrador, pocas mesas, para llevar.</span></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="rubro" data-val="restaurante" aria-pressed="false"><span class="mzw-ic">{{icon:plato}}</span><span class="mzw-ct"><b>Restaurante con salón</b><span>Mesas, meseros, cocina y barra.</span></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="rubro" data-val="pizzeria" aria-pressed="false"><span class="mzw-ic">{{icon:pizza}}</span><span class="mzw-ct"><b>Pizzería</b><span>Salón, para llevar y delivery propio.</span></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="rubro" data-val="foodtruck" aria-pressed="false"><span class="mzw-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 16.5V6.5h11v10"/><path d="M13.5 9.5h4l3 3.5v3.5h-2"/><path d="M9.5 16.5h-2"/><circle cx="6" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M5 9.5h6"/></svg></span><span class="mzw-ct"><b>Food truck <span class="mzw-new">Nuevo</span></b><span>Uno o varios trucks, pedidos por nombre.</span></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="rubro" data-val="heladeria" aria-pressed="false"><span class="mzw-ic">{{icon:helado}}</span><span class="mzw-ct"><b>Heladería</b><span>Sabores del día, fila rápida, tortas por encargo.</span></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="rubro" data-val="bar" aria-pressed="false"><span class="mzw-ic">{{icon:copa}}</span><span class="mzw-ct"><b>Bar o pub</b><span>Barra, tragos por onza, happy hour.</span></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="rubro" data-val="discoteca" aria-pressed="false"><span class="mzw-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/><path d="M9 9.5l11-2"/></svg></span><span class="mzw-ct"><b>Discoteca o boliche</b><span>Entradas, puerta, mesas VIP y manillas.</span></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="rubro" data-val="eventos" aria-pressed="false"><span class="mzw-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7h17v3a2 2 0 0 0 0 4v3h-17v-3a2 2 0 0 0 0-4z"/><path d="M14.5 7.5v1.5M14.5 11.2v1.6M14.5 15v1.5"/></svg></span><span class="mzw-ct"><b>Eventos y productoras</b><span>Venta de entradas, relacionadores y control en puerta.</span></span><span class="mzw-tick" aria-hidden="true"></span></button>
     </div>
   </div>
-</section>
 
-<section class="wrap" style="padding-bottom:clamp(3rem,6vw,5rem)">
-  <p class="step demoweb-step"><span class="pill" style="margin-right:.5rem">Paso 2</span> Toca «Estoy en una mesa» o «Pedir para llevar o delivery» y el menú se abre en su celular</p>
-  <div class="demo-stage">
-    <div class="demo-side">
-      <p class="side-label">Tu cliente · en su celular · <b style="color:#fff">esta pantalla responde: tócala</b></p>
-      <div class="phone-wrap"><span class="try-tag" aria-hidden="true"><i></i><svg viewBox="0 0 24 24"><path d="M9 11V5a1.5 1.5 0 0 1 3 0v6"/><path d="M12 10a1.5 1.5 0 0 1 3 0v2"/><path d="M15 11a1.5 1.5 0 0 1 3 0v2"/><path d="M18 12.5a1.5 1.5 0 0 1 3 0V17a5 5 0 0 1-5 5h-3.5a5 5 0 0 1-4.2-2.3L5 15.4a1.6 1.6 0 0 1 2.6-1.8L9 15"/></svg>Demo interactiva: toca, pide y paga</span>
-        <div class="phone" data-mode="live">
-          <div class="screen"></div>
-        </div>
-      </div>
-    </div>
-    <div class="demo-side owner">
-      <p class="side-label">Tú, el dueño · Panel de pedidos y caja</p>
-      <div class="owner-panel glass-dark">
-        <div class="owner-hd"><div><b id="o-biz">Pizzería La Esquina</b><small id="o-desc"></small></div><span class="live-dot" aria-label="En vivo"></span></div>
-        <div class="owner-kpis">
-          <div><b class="num" id="o-total">0 Bs</b><span>vendido hoy</span></div>
-          <div><b class="num" id="o-n">0</b><span>pedidos en cocina</span></div>
-          <div><b class="num" id="o-zero">0 %</b><span>de comisión</span></div>
-        </div>
-        <div class="o-com" id="o-com">
-          <div class="o-com-row"><span>Vendido en delivery y recojo · <b>0 % de comisión</b></span><b class="num" id="o-ours">0 Bs</b></div>
-          <div class="o-com-row"><span>Vendido en mesa con QR · <b>0 % de comisión</b></span><b class="num" id="o-mesa">0 Bs</b></div>
-          <div class="o-com-row"><span>Cobrado en caja · <b>0 % de comisión</b></span><b class="num" id="o-cash">0 Bs</b></div>
-          <div class="o-com-row alt"><label for="o-pct">Si esos pedidos de delivery y recojo hubieran entrado por una app con comisión del</label><span class="o-pct-wrap"><input id="o-pct" type="number" inputmode="numeric" min="0" max="60" value="25"><b>%</b></span><span>(una estimación: revisa tu liquidación), la app se habría quedado con <b class="num" id="o-saved">0 Bs</b></span></div>
-        </div>
-        <div class="owner-live" id="o-live"><p class="o-empty">Cuando tu cliente pida, el pedido aparece aquí con su mesa o su dirección, y tu caja confirma el pago.</p></div>
-        <div class="owner-controls">
-          <div class="field"><label for="d-deliv" id="d-deliv-label">¿Dónde está tu cliente y cómo paga? (también lo elige él en su celular)</label><select id="d-deliv"></select></div>
-          <div class="cta-row">
-            <button type="button" class="btn btn-sun" id="d-pay">Cobrar con QR</button>
-            <a class="btn btn-ghost-dark" id="d-send" href="https://wa.me/59162506518" target="_blank" rel="noopener">Mandarnos este pedido de prueba</a>
-            <button type="button" class="link-dark" id="d-reset">Empezar de nuevo</button>
-          </div>
-          <p class="friction" style="color:var(--on-night-2)">Es una demo: no se cobra nada. En tu local, tu cliente paga con el QR de tu banco o en efectivo, toca «Ya pagué» y tu caja confirma el pago. 0 % de comisión en todos los planes. Los avisos de estado por WhatsApp vienen incluidos en todos los planes.</p>
-        </div>
-      </div>
+  <div class="mzw-step" data-step="2" hidden>
+    <h1 class="mzw-title" id="mzw-t2" tabindex="-1" data-truck="¿Cuántos trucks tienes?">¿Cuántos locales tienes?</h1>
+    <div class="mzw-cards mzw-cards-3" role="group" aria-labelledby="mzw-t2">
+      <button type="button" class="mzw-card mzw-num" data-key="locales" data-val="uno" aria-pressed="false"><span class="mzw-big" aria-hidden="true">1</span><span class="mzw-ct"><b>Uno</b></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card mzw-num" data-key="locales" data-val="dos-tres" aria-pressed="false"><span class="mzw-big" aria-hidden="true">2–3</span><span class="mzw-ct"><b>Dos o tres</b></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card mzw-num" data-key="locales" data-val="mas" aria-pressed="false"><span class="mzw-big" aria-hidden="true">4+</span><span class="mzw-ct"><b>Más de tres</b><span>El plan Escala incluye hasta 3. Cada local extra se cotiza aparte.</span></span><span class="mzw-tick" aria-hidden="true"></span></button>
     </div>
   </div>
-</section>
 
-<section class="wrap" style="padding-bottom:clamp(3rem,6vw,5rem)">
-  <p class="step demoweb-step"><span class="pill" style="margin-right:.5rem">Paso 3</span> Así se conecta todo y así aparece el dinero</p>
-  <div class="night flowdemo" style="border-radius:22px;padding:clamp(1.4rem,3vw,2.4rem)">
-    <div class="sec-head row" style="margin-bottom:1.2rem"><div><p class="eyebrow" id="f-eyebrow">El camino del cliente</p><h2 id="f-title" style="font-size:var(--step-3)">De «¿qué pedimos?» a «ya está en el horno», sin mesero y sin app.</h2></div></div>
-    <div id="flowdemo"></div>
-    <div class="money" id="f-money"></div>
-    <div style="margin:2rem 0 0;padding-top:1.6rem;border-top:1px solid rgba(255,255,255,.12)"><div class="sec-head" style="margin-bottom:1rem"><p class="eyebrow">Paso a paso, con decisiones</p><h3 style="font-size:var(--step-2)">Quién hace qué en cada paso, y dónde entra el dinero.</h3></div>{{include:flows}}</div>
-    <div class="cta-row" style="margin-top:1.4rem"><a class="btn btn-sun" id="f-calc" href="/calculadora/?rubro=pizzeria">Calcula cuánto pagarías y cuánto se queda la app</a><a class="link-dark" href="/empezar/">Qué necesitas entregar</a></div>
+  <div class="mzw-step" data-step="3" hidden>
+    <h1 class="mzw-title" id="mzw-t3" tabindex="-1">¿Cómo atiendes a tus clientes?</h1>
+    <p class="mzw-sub" id="mzw-s3">Marca todo lo que usas.</p>
+    <div class="mzw-cards mzw-cards-2 mzw-multi" role="group" aria-labelledby="mzw-t3" aria-describedby="mzw-s3">
+      <button type="button" class="mzw-card" data-key="atiende" data-val="mostrador" aria-pressed="false"><span class="mzw-ic">{{icon:bolsa}}</span><span class="mzw-ct"><b>En el mostrador o para llevar</b></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="atiende" data-val="mesas" aria-pressed="false"><span class="mzw-ic">{{icon:mesa}}</span><span class="mzw-ct"><b>En mesas, con meseros</b></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="atiende" data-val="reservas" aria-pressed="false"><span class="mzw-ic">{{icon:calendario}}</span><span class="mzw-ct"><b>Con reservas</b></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="atiende" data-val="delivery" aria-pressed="false"><span class="mzw-ic">{{icon:moto}}</span><span class="mzw-ct"><b>Delivery propio</b></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="atiende" data-val="eventos" aria-pressed="false" data-only="bar restaurante"><span class="mzw-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7h17v3a2 2 0 0 0 0 4v3h-17v-3a2 2 0 0 0 0-4z"/><path d="M14.5 7.5v1.5M14.5 11.2v1.6M14.5 15v1.5"/></svg></span><span class="mzw-ct"><b>Eventos con entrada</b></span><span class="mzw-tick" aria-hidden="true"></span></button>
+    </div>
+    <p class="mzw-err" id="mzw-e3" role="alert" hidden>Marca al menos una opción.</p>
+    <div class="mzw-actions"><button type="button" class="btn btn-primary btn-lg" data-next>Siguiente <span class="arr" aria-hidden="true">→</span></button></div>
   </div>
-</section>
 
-<section class="sec night"><div class="wrap split">
-  <div class="sec-head" style="margin:0"><p class="eyebrow">¿Te gustó?</p><h2>Esto, con tu carta y tus fotos, en 7 días hábiles.</h2></div>
-  <div style="display:grid;gap:1rem">
-    <p class="lede">Nos mandas tu carta y tus fotos. Te entregamos tu menú web, tus QR listos para imprimir y tu Panel de pedidos y caja activo. Instalación de {{precio:install}} Bs, desde 400 Bs al mes y 0 % de comisión, en la mesa, para llevar y a domicilio.</p>
-    <div class="cta-row"><a class="btn btn-primary btn-lg btn-pulse" data-wa="Hola, probé la demo y quiero mi menú web con QR en las mesas. Mi local: ___ Ciudad: ___ Mesas: ___" href="https://wa.me/59162506518">Quiero mi menú web con QR</a><a class="link" href="/planes/">Ver la oferta completa</a></div>
-<p class="cta-sub"><span class="ok">✓</span>Te responde una persona · Sin compromiso · Pagas con QR</p>
+  <div class="mzw-step" data-step="4" hidden>
+    <h1 class="mzw-title" id="mzw-t4" tabindex="-1">¿Cómo llevas tu inventario hoy?</h1>
+    <div class="mzw-cards mzw-cards-3" role="group" aria-labelledby="mzw-t4">
+      <button type="button" class="mzw-card" data-key="inventario" data-val="no" aria-pressed="false"><span class="mzw-ct"><b>No lo llevo todavía</b></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="inventario" data-val="cuaderno" aria-pressed="false"><span class="mzw-ct"><b>En cuaderno o Excel</b></span><span class="mzw-tick" aria-hidden="true"></span></button>
+      <button type="button" class="mzw-card" data-key="inventario" data-val="receta" aria-pressed="false"><span class="mzw-ct"><b>Quiero controlarlo por receta</b><span>Cada venta descuenta sus insumos: onzas, porciones, unidades.</span></span><span class="mzw-tick" aria-hidden="true"></span></button>
+    </div>
   </div>
-</div></section>
+
+  <div class="mzw-step mzw-result" data-step="resultado" hidden>
+    <h1 class="mzw-title" id="mzw-tr" tabindex="-1">Tu demo está listo</h1>
+    <p class="mzw-lede">Para un negocio como el tuyo te recomendamos el plan <b id="mzw-rec">Crece: Bs {{precio:plan_crece}} al mes</b>. 0 % de comisión. Instalación única de Bs {{precio:install}}.</p>
+    <p class="mzw-why" id="mzw-why"></p>
+    <div class="mzw-chips" role="group" aria-label="Plan del demo">
+      <button type="button" class="mzw-chip" data-plan="arranca" data-name="Arranca" data-price="{{precio:plan_arranca}}" aria-pressed="false"><b>Arranca</b> <span>Bs {{precio:plan_arranca}}</span><small class="mzw-rec-tag">Recomendado</small></button>
+      <button type="button" class="mzw-chip" data-plan="crece" data-name="Crece" data-price="{{precio:plan_crece}}" aria-pressed="false"><b>Crece</b> <span>Bs {{precio:plan_crece}}</span><small class="mzw-rec-tag">Recomendado</small></button>
+      <button type="button" class="mzw-chip" data-plan="escala" data-name="Escala" data-price="{{precio:plan_escala}}" aria-pressed="false"><b>Escala</b> <span>Bs {{precio:plan_escala}}</span><small class="mzw-rec-tag">Recomendado</small></button>
+      <button type="button" class="mzw-chip" data-plan="nightlife" data-name="Nightlife" data-price="{{precio:plan_nightlife}}" aria-pressed="false"><b>Nightlife</b> <span>Bs {{precio:plan_nightlife}}</span><small class="mzw-rec-tag">Recomendado</small></button>
+    </div>
+    <p class="mzw-note" id="mzw-other" aria-live="polite"><span hidden>Vas a ver solo lo que incluye ese plan.</span></p>
+    <div class="field mzw-name">
+      <label for="mzw-nombre">¿Cómo se llama tu negocio?</label>
+      <input id="mzw-nombre" name="nombre" type="text" maxlength="40" autocomplete="organization" placeholder="Opcional: lo ponemos en tu demo" aria-describedby="mzw-nombre-err" spellcheck="false">
+      <p class="mzw-err" id="mzw-nombre-err" hidden>Usa solo letras, números, espacios y . ' &amp; -</p>
+    </div>
+    <div class="mzw-actions"><button type="button" class="btn btn-primary btn-lg" data-open>Abrir mi demo <span class="arr" aria-hidden="true">→</span></button></div>
+    <p class="mzw-fine">Datos de ejemplo. Nada de lo que hagas aquí llega a un negocio real ni envía mensajes.</p>
+  </div>
+
+  <div class="mzw-step mzw-building" data-step="armando" hidden>
+    <div class="mzw-spin" aria-hidden="true"><i></i></div>
+    <p class="mzw-title mzw-build-text" id="mzw-tb" tabindex="-1">Armando tu demo: carta, mesas, ventas del mes, inventario y clientes de ejemplo…</p>
+    <div class="mzw-fail" id="mzw-fail" hidden>
+      <p class="mzw-fail-msg" id="mzw-fail-msg" role="alert">No pudimos abrir tu demo. Prueba de nuevo en un minuto.</p>
+      <div class="mzw-actions"><button type="button" class="btn btn-primary" data-retry>Volver a intentar</button><button type="button" class="mzw-back link" data-back>Atrás</button></div>
+    </div>
+  </div>
+
+  <div class="mzw-foot"><button type="button" class="mzw-back link" data-back hidden><span aria-hidden="true">←</span> Atrás</button></div>
+</section>
+<div id="demo-vivo"></div>
+</div>
