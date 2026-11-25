@@ -21,10 +21,14 @@
     staging: {
       functions: 'https://pnkfxemhzswcbfygvfzf.supabase.co/functions/v1',
       app: 'https://mezzita-app-staging.rbrunocardona.workers.dev',
-      site: '',
+      site: 'https://mezzita-demo-sitios-staging.rbrunocardona.workers.dev',
     },
-    // Functions URL is set when the owner creates the mezzita-demo project; until then ?backend=demo is refused.
-    demo: { functions: '', app: 'https://demo.mezzita.com', site: 'https://sitios.mezzita.com' },
+    // The mezzita-demo project (created 2026-11-25).
+    demo: {
+      functions: 'https://wuzmjylwtrvlfbywwhid.supabase.co/functions/v1',
+      app: 'https://demo.mezzita.com',
+      site: 'https://sitios.mezzita.com',
+    },
   };
 
   // What the visitor reads for each error code of L2 and L3 (demo-l2.md, demo-l3.md).
