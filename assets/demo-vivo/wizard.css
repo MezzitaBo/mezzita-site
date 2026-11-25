@@ -95,6 +95,8 @@
   .mzw-cards-4 .mzw-ct{grid-area:ct;align-self:start}
 }
 
-/* en el celular la barra fija de WhatsApp del sitio tapaba «Siguiente» y «Abrir mi demo»: en /demo/ no va
-   (el demo trae su propio «Quiero esto en mi negocio») */
-@media (max-width:640px){.mbar{display:none!important}body{padding-bottom:0!important}}
+/* en el celular la barra fija de WhatsApp del sitio se queda (dueño: no se quita ningún botón de WhatsApp);
+   «Siguiente» y «Abrir mi demo» se quedan pegados justo encima de ella para que nunca los tape */
+@media (max-width:640px){
+  .mzw-step .mzw-actions{position:sticky;bottom:calc(5.4rem + env(safe-area-inset-bottom,0px));z-index:5;margin:0 -16px;padding:.7rem 16px .5rem;background:linear-gradient(to top,var(--paper) 72%,rgba(244,243,238,0))}
+}
