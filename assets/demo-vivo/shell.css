@@ -136,7 +136,7 @@ html.mz-vivo .mzd,.mzd[data-layout="phone"]{top:0;z-index:70}
 .mzd-rail-acts{flex:none;display:flex;gap:8px;margin-left:auto}
 .mzd-rail .mzd-ghost{border-color:rgba(255,255,255,.24);color:var(--on-night)}
 .mzd-rail .mzd-ghost:hover{background:rgba(255,255,255,.1);border-color:var(--on-night)}
-.mzd-toast{position:absolute;z-index:8;bottom:18px;right:18px;max-width:22rem;padding:12px 14px;border-radius:12px;background:var(--night);color:var(--on-night);font-size:14px;line-height:1.35;box-shadow:var(--shadow)}
+.mzd-toast{position:absolute;z-index:8;bottom:18px;right:18px;max-width:24rem;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--night);color:var(--on-night);font-size:14px;line-height:1.35;box-shadow:var(--shadow)}
 
 /* modal */
 .mzd-modal{position:absolute;inset:0;z-index:40;display:grid;place-items:center;padding:16px;background:rgba(21,23,28,.45)}
@@ -178,18 +178,16 @@ html.mz-vivo .mzd,.mzd[data-layout="phone"]{top:0;z-index:70}
 .mzp-msg small{display:block;font-size:11.5px;font-weight:600;color:var(--wa,#1E8E5A)}
 .mzp-out{align-self:flex-end;background:#D9FDD3;border-top-right-radius:2px}
 .mzp-inb{align-self:flex-start;border-top-left-radius:2px}
-.mzp-typing{display:flex;gap:4px;padding:12px 12px}
-.mzp-typing i{width:7px;height:7px;border-radius:50%;background:#8696A0;animation:mzp-dot 1s infinite ease-in-out}
-.mzp-typing i:nth-child(2){animation-delay:.15s}.mzp-typing i:nth-child(3){animation-delay:.3s}
 @keyframes mzp-in{from{opacity:0;transform:translateY(6px)}}
-@keyframes mzp-dot{0%,80%,100%{opacity:.35;transform:none}40%{opacity:1;transform:translateY(-3px)}}
-.mzp-chips{flex:none;display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px 2px}
-.mzp-chips button{appearance:none;min-height:40px;padding:8px 14px;border-radius:20px;border:1px solid var(--wa);background:#fff;color:#0B6B43;font:600 14px/1.25 var(--f-body);text-align:left;cursor:pointer;box-shadow:0 1px 1px rgba(11,20,26,.1)}
-.mzp-chips button:hover:not(:disabled){background:#E7F6EE}
-.mzp-chips button:disabled{opacity:.5;cursor:default}
+.mzd-toast .mzd-link{flex:none;padding:0 2px;color:var(--sun)}
+/* «Viendo el chat de»: which of the 12 guests the phone shows; a dot when another chat has news */
+.mzp-pick{flex:none;display:flex;align-items:center;gap:8px;padding:8px 12px;background:#F0F2F5;border-bottom:1px solid rgba(11,20,26,.08);font-size:13px;color:#54656F}
+.mzp-pick select{flex:1;min-width:0;height:36px;padding:0 8px;border:1px solid rgba(11,20,26,.14);border-radius:10px;background:#fff;font:600 14px var(--f-body);color:#111B21}
+.mzp-new{flex:none;width:9px;height:9px;border-radius:50%;background:var(--wa)}
+.mzp-msg a{color:#027EB5;text-decoration:underline;overflow-wrap:anywhere}
 .mzp-in{flex:none;display:flex;align-items:center;gap:8px;padding:8px 10px 14px}
 .mzp-in input{flex:1;min-width:0;height:44px;padding:0 16px;border:0;border-radius:22px;background:#fff;font:400 15px var(--f-body);color:#111B21}
-.mzp-in input:disabled{background:rgba(255,255,255,.7);color:#667781}
+.mzp-in input:disabled{background:rgba(255,255,255,.7);color:#667781;-webkit-text-fill-color:#667781;opacity:1}
 .mzp-in button{flex:none;display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:50%;background:var(--wa);color:#fff;cursor:pointer}
 .mzp-in button:disabled{background:#9DB8A9;cursor:default}
 .mzp-in svg{width:20px;height:20px}
@@ -220,12 +218,13 @@ html.mz-vivo .mzd,.mzd[data-layout="phone"]{top:0;z-index:70}
 .mzd[data-layout="phone"] .mzd-seats{gap:0}
 .mzd[data-layout="phone"] .mzd-seat>iframe{border:0;border-radius:0;box-shadow:none}
 .mzd[data-layout="phone"] .mzp-hd{padding-top:10px}
+.mzd[data-layout="phone"] .mzp-pick select{height:44px}
 .mzd[data-layout="phone"] .mzd-rail{position:relative;flex:none;left:auto;right:auto;bottom:auto;border-radius:0;border:0;border-top:1px solid rgba(255,255,255,.1)}
 .mzd[data-layout="phone"] .mzd-rail-in{flex-direction:column;align-items:stretch;gap:10px;padding:12px}
 .mzd[data-layout="phone"] .mzd-rail-b{font-size:14.5px}
 .mzd[data-layout="phone"] .mzd-rail-acts{margin:0}
 .mzd[data-layout="phone"] .mzd-rail-acts>*{flex:1;min-height:44px;height:44px}
-.mzd[data-layout="phone"] .mzd-toast{top:8px;left:12px;right:12px;max-width:none}
+.mzd[data-layout="phone"] .mzd-toast{top:8px;bottom:auto;left:12px;right:12px;max-width:none}
 .mzd[data-layout="phone"] .mzd-mbar{display:flex;flex:none;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background:var(--night)}
 .mzd[data-layout="phone"] .mzd-mbar{gap:8px}
 .mzd-mbtn{appearance:none;flex:none;display:flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 18px;border:0;border-radius:12px;background:var(--sun);color:var(--ink);font:700 16px/1 var(--f-body);cursor:pointer}
@@ -249,7 +248,6 @@ html.mz-vivo .mzd,.mzd[data-layout="phone"]{top:0;z-index:70}
 .mzd-sheet-menu .is-locked .mzd-chip{margin:0}
 .mzd[data-layout="phone"] .mzd-x{width:44px;height:44px}
 .mzd-sheet-hd .mzd-link{min-height:44px;padding:0 4px}
-.mzd[data-layout="phone"] .mzp-chips button{min-height:44px}
 @media (min-width:600px){
   .mzd[data-layout="phone"] .mzd-guest[data-kind="wa"] .mzd-screen{background:var(--paper-2)}
   .mzd[data-layout="phone"] .mzd-wa{left:50%;right:auto;width:min(100%,560px);transform:translateX(-50%);box-shadow:0 0 0 1px var(--line)}

@@ -270,9 +270,11 @@
     teardown();
     var backend = api.pickBackend(root.location.search);
     S = {
-      params: params, backend: backend, client: api.client(backend), sb: null, menu: [], cursor: null, state: null,
-      guest: null, guestSub: null, team: ['owner'], mside: 'guest', full: '', tour: null, toastT: null, pt: null,
+      params: params, backend: backend, client: api.client(backend), sb: null, menu: [], state: null,
+      guest: null, guestSub: null, team: ['owner'], mside: 'guest', full: '', tour: null, toastT: null, toastQ: [], pt: null,
       pulsing: false, expired: false, played: {}, welcomeSeen: false, ambientNext: 0, timers: [],
+      // WhatsApp: messages per conversation {list, ids, cursor}, the one on the phone, the board as last pulsed
+      msgs: {}, view: 1, chats: [], stages: {}, follow: null, approved: {}, clockMs: 0, synced: false,
     };
     var s = S;
     var h = host();
@@ -289,14 +291,16 @@
     var start = opts.sb ? Promise.resolve(opts.sb) : s.client.start(params);
     return start.then(function (sb) {
       if (s !== S) return null;
+      sb.plan = api.planKey(sb);
       s.sb = sb;
       if (opts.saved) {
-        // the cursor stays null: the first pulse brings the whole conversation back into the new phone
+        // cursors stay null: the first pulse brings the conversation on the phone back whole
         s.welcomeSeen = Boolean(opts.saved.welcomeSeen);
         s.ambientNext = opts.saved.ambientNext || 0;
+        s.clockMs = opts.saved.clockMs || 0;
+        s.view = opts.saved.view || 1;
         if (opts.saved.guest) s.guest = opts.saved.guest;
         if (opts.saved.team) s.team = opts.saved.team;
-        s.flows = opts.saved.flows || null;
       }
       checkPrice(sb, params);
       mount();
@@ -318,9 +322,14 @@
 
   function restart() { return S ? open(S.params) : Promise.resolve(null); }
 
-  function close() {
+  /**
+   * Hides the shell and gives the page back (the wizard shows again on mezzita-demo:close). The sandbox stays in
+   * sessionStorage, so saved()/resume() reopen it (browser Back from #demo); {forget: true} drops it.
+   */
+  function close(opts) {
+    if (S && S.sb && !(opts && opts.forget)) save();
     teardown();
-    store(null);
+    if (opts && opts.forget) store(null);
     var h = D.getElementById('demo-vivo');
     if (h) { h.innerHTML = ''; h.hidden = true; }
     D.documentElement.classList.remove('mz-demo-open', 'mz-vivo', 'mz-demo-phone');
@@ -333,7 +342,10 @@
     S = null;
     clearTimeout(s.pt);
     clearTimeout(s.toastT);
+    clearInterval(s.tickT);
     s.timers.forEach(clearTimeout);
+    if (s.timeline) s.timeline.stop();
+    if (s.clock) s.clock.pause();
     if (s.ambient) s.ambient.stop();
     if (s.tour) s.tour.active = false;
     if (s.ro) s.ro.disconnect();
@@ -347,7 +359,7 @@
     store({
       backend: S.backend, params: S.params, sb: S.sb, welcomeSeen: S.welcomeSeen,
       ambientNext: S.ambient ? S.ambient.next : S.ambientNext, guest: S.guest, team: S.team,
-      flows: S.phone ? S.phone.flows : null,
+      clockMs: S.clock ? Math.round(S.clock.now()) : S.clockMs, view: S.view,
     });
   }
 
@@ -424,7 +436,7 @@
           '<div class="mzd-sheet-acts"><button type="button" class="mzd-ghost" data-act="guide">Guía</button><button type="button" class="mzd-ghost" data-act="restart">Reiniciar</button>' +
             '<a class="btn btn-primary" href="' + esc(want) + '" target="_blank" rel="noopener">Quiero esto en mi negocio</a></div>' +
           '<nav class="mzd-sheet-menu" aria-label="Qué ver en la demo">' + menuHtml(S.menu, true) + '</nav>' +
-          '<p class="mzd-sheet-ft"><button type="button" class="mzd-link" data-act="exit">Salir de la demo</button></p>' +
+          '<p class="mzd-sheet-ft"><button type="button" class="mzd-ghost" data-act="exit">Salir de la demo</button></p>' +
         '</div></div>' +
       '<div class="mzd-modal" hidden><div class="mzd-modal-card" role="dialog" aria-modal="true" tabindex="-1"></div></div>';
   }
@@ -443,18 +455,10 @@
     S.root.setAttribute('data-full', '');
     layout();
 
-    // A reservation script makes no sense on a plan without reservations: its chip is left out.
-    var scripts = Object.assign({}, (sb.wa && sb.wa.scripts) || {});
-    if (!(sb.modules && sb.modules.reservations && sb.modules.reservations.on)) delete scripts.wa_reservation;
     S.phone = new phoneMod.Phone($('.mzd-wa'), {
       venue: sb.org && sb.org.name,
-      scripts: scripts,
-      freeText: Boolean(sb.wa && sb.wa.free_text),
-      flows: S.flows,
-      send: function (script, step) { return S.client.play(S.sb, script, step); },
-      text: function (t) { return S.client.play(S.sb, 'free', { text: t }); },
-      onChange: function () { observe(null); },
-      onExpired: expired,
+      onPick: viewChat,
+      onLink: openLink,
     });
 
     S.tpool = new FramePool({ max: POOL_TEAM, make: makeSeat, drop: dropEl });
@@ -473,16 +477,116 @@
     bind();
     S.ambient = new tours.Ambient((sb.wa && sb.wa.ambient) || [], function (i) {
       var s = S;
-      s.client.play(s.sb, 'ambient', i).then(function () { if (s === S) { save(); schedulePulse(600); } }, function (err) {
-        if (s === S && err && err.expired) expired();
-      });
+      s.client.play(s.sb, { script: 'ambient', event: i }).then(function (r) {
+        if (s !== S) return;
+        tell(r, null);
+        save();
+        schedulePulse(600);
+      }, function (err) { if (s === S && err && err.expired) expired(); });
     }, { from: S.ambientNext });
     S.ambient.start();
     if (D.hidden) S.ambient.hold();
 
+    // The 12 WhatsApp conversations: the shell owns the clock (active seconds) and fires each beat when due. It
+    // starts ticking after the first pulse has brought the stored progress, so a reload never replays a beat.
+    S.clock = new tours.ActiveClock({ from: S.clockMs, speed: speed() });
+    if (!D.hidden) S.clock.start();
+    S.timeline = new tours.WaTimeline(sb.wa_timeline || [], {
+      now: function () { return S.clock.now(); },
+      play: function (conv, beat) { return S.client.play(S.sb, { conv: conv, beat: beat }); },
+      onResult: onBeat,
+      onError: function (c, err) { if (err && err.expired) expired(); },
+    });
+    S.tickT = setInterval(function () { if (S && S.synced && !D.hidden) S.timeline.tick(); }, 500);
+
+    S.phone.show(S.view, []);
     save();
     pulse();
     if (!S.welcomeSeen) welcome();
+  }
+
+  /** ?demo_speed=N (1–20) runs the clock faster, on the mock only: for the screenshot tool. */
+  function speed() {
+    var m = /[?&]demo_speed=(\d+)/.exec(root.location.search);
+    return S.client.mock && m ? Math.max(1, Math.min(20, Number(m[1]))) : 1;
+  }
+
+  // ------------------------------------------------------------------------------------------ WhatsApp --
+
+  function chatStore(conv) {
+    return S.msgs[conv] || (S.msgs[conv] = { list: [], ids: {}, cursor: null });
+  }
+  /** Keeps a conversation's messages; shows them if it is the one on the phone. */
+  function keep(conv, messages) {
+    var st = chatStore(conv), fresh = [];
+    (messages || []).forEach(function (m) {
+      if (!m || !m.id || st.ids[m.id]) return;
+      st.ids[m.id] = true;
+      st.list.push(m);
+      fresh.push(m);
+    });
+    if (conv === S.view && fresh.length) S.phone.add(fresh);
+  }
+
+  function viewChat(conv) {
+    S.view = conv;
+    S.phone.show(conv, chatStore(conv).list);
+    S.phone.setChats(S.chats);
+    save();
+    schedulePulse(0);
+  }
+
+  /** A beat came back from demo-play: its messages, its toasts, the order the recorrido follows. */
+  function onBeat(c, r) {
+    if (!S) return;
+    keep(c.conv, r.messages);
+    (r.did || []).forEach(function (d) {
+      if (d.actor === 'cashier' && d.action === 'approve') S.approved[c.conv] = true;
+    });
+    tell(r, c);
+    observe(null);
+    schedulePulse(800);
+  }
+
+  /** Toasts for what the demo did by itself (addendum §6), one at a time. */
+  function tell(r, c) {
+    var who = c ? String(c.guest_name || '').replace(/\.$/, '') : ''; // «Gabriel N.» ends its own sentence
+    (r.did || []).forEach(function (d) {
+      var n = d.ticket_number ? ' #' + d.ticket_number : '';
+      var a = d.actor + ':' + d.action;
+      if (a === 'guest:new_chat') toast('Nuevo chat de WhatsApp: ' + who, 'board');
+      else if (a === 'assistant:order') toast('Pedido' + n + ' por WhatsApp: está en «Pedidos por confirmar».');
+      else if (a === 'assistant:reservation') toast('Nueva reserva por WhatsApp: ' + who + '.');
+      else if (a === 'assistant:handoff') toast(who + ' pide hablar con una persona: respóndele en el tablero.', 'board');
+      else if (a === 'cashier:approve') toast('Caja aceptó el pedido' + n + ' (automático en la demo)');
+      else if (d.action === 'ready') toast((d.actor === 'bar' ? 'Barra marcó' : d.actor === 'kitchen_bar' ? 'Cocina y barra marcaron' : 'Cocina marcó') + ' listo el pedido' + n + ' (automático en la demo)');
+      else if (a === 'cashier:dispatch') toast('El pedido' + n + ' salió en camino (automático en la demo)');
+      else if (a === 'guest:web_order') toast('Nuevo pedido desde el menú web.');
+      else if (a === 'guest:web_reservation') toast('Nueva reserva desde el menú web.');
+    });
+  }
+
+  /** Sends a seat with a WhatsApp board (owner, admin or cashier) to it. */
+  function toBoard() {
+    var seat = ['owner', 'admin', 'cashier'].filter(function (r) { return (S.shown || []).indexOf(r) >= 0; })[0] || 'owner';
+    showTeam([seat]);
+    side('team');
+    goTo(seat, '/whatsapp');
+  }
+
+  /** A link in a chat: app and site pages open in the phone; anything else in a new tab. */
+  function openLink(url, e) {
+    var target;
+    try { target = new URL(url, root.location.href); } catch (x) { return; }
+    var app = S.client.appOrigin(S.sb);
+    var inPhone = S.client.mock || target.origin === app || target.origin === root.location.origin;
+    if (!inPhone) return;
+    if (e) e.preventDefault();
+    S.linkUrl = target.href;
+    var f = S.gpool.get('link');
+    if (f && !S.client.mock) f.src = S.linkUrl;
+    showGuest('link');
+    side('guest');
   }
 
   function bind() {
@@ -496,8 +600,8 @@
       else if (!$('.mzd-sheet').hidden) sheet(false);
     });
     on(D, 'visibilitychange', function () {
-      if (D.hidden) { clearTimeout(s.pt); s.ambient && s.ambient.hold(); }
-      else { s.ambient && s.ambient.release(); pulse(); }
+      if (D.hidden) { clearTimeout(s.pt); s.clock.pause(); s.ambient && s.ambient.hold(); save(); }
+      else { s.clock.start(); s.ambient && s.ambient.release(); pulse(); }
     });
     on(root, 'resize', layout);
     // The menu opens on hover and on keyboard focus, and folds as soon as an item is chosen (it covers the guest's
@@ -540,6 +644,9 @@
     else if (act === 'do-restart') { modal(null); open(S.params).catch(noop); }
     else if (act === 'reopen') { open(S.params).catch(noop); }
     else if (act === 'exit') close();
+    else if (act === 'exit-new') close({ forget: true });
+    else if (act === 'board') toBoard();
+    else if (act === 'back-chat') showGuest('whatsapp');
     else if (act === 'explore') { modal(null); S.welcomeSeen = true; save(); }
     else if (act === 'modal-close') modal(null);
     else if (act === 'sheet') sheet(true);
@@ -590,13 +697,18 @@
     return wrap;
   }
 
+  /** The demo venue's own website (L7, same origin): /demo/sitio/?org=&venue=&tpl=&evento=&backend=. */
+  function sitePath(sb, backend) {
+    var v = (sb.venues && sb.venues[0]) || {};
+    var ev = sb.links && sb.links.event ? String(sb.links.event).split('?')[0].split('/').filter(Boolean).pop() : '';
+    return '/demo/sitio/?org=' + encodeURIComponent((sb.org && sb.org.slug) || '') + '&venue=' + encodeURIComponent(v.slug || '') +
+      '&tpl=' + encodeURIComponent(sb.template || '') + (ev ? '&evento=' + encodeURIComponent(ev) : '') + '&backend=' + backend;
+  }
+
   function guestPath(key) {
     var sb = S.sb, links = sb.links || {};
-    if (key === 'site') {
-      var v = (sb.venues && sb.venues[0]) || {};
-      return '/demo/sitio/?org=' + encodeURIComponent((sb.org && sb.org.slug) || '') + '&venue=' + encodeURIComponent(v.slug || '') +
-        '&backend=' + S.backend;
-    }
+    if (key === 'site') return sitePath(sb, S.backend);
+    if (key === 'link') return S.linkUrl || '';
     var map = { menu: 'menu', table: 'table', reserve: 'reserve', tickets: 'event', entry: 'entry', wristband: 'wristband' };
     return links[map[key]] ? S.client.guestUrl(sb, links[map[key]]) : '';
   }
@@ -604,7 +716,9 @@
   function makeGuest(key) {
     var it = findItem(S.menu, key === 'wristband' ? 'entry' : key) || { label: key };
     var f = iframe(frameName('guest', key), (SUB_LABEL[key] || it.label) + ' · demo');
-    if (S.client.mock) f.srcdoc = S.client.page(key, S.sb);
+    // The venue site (L7) has its own mock, so it loads for real on every backend; the app's guest pages are
+    // stand-ins on the mock.
+    if (S.client.mock && key !== 'site') f.srcdoc = S.client.page(key, S.sb);
     else f.src = guestPath(key);
     f.className = 'mzd-gframe';
     f.setAttribute('data-key', key);
@@ -615,9 +729,10 @@
   function dropEl(el) { if (el && el.parentNode) el.parentNode.removeChild(el); }
 
   function showGuest(key, sub, quiet) {
-    var it = findItem(S.menu, key);
+    // 'link': a page opened from a chat (payment, menu, event), shown in the phone under WhatsApp
+    var it = key === 'link' ? { key: 'link', label: 'WhatsApp', state: 'on', subs: [] } : findItem(S.menu, key);
     if (!it || it.state !== 'on') return;
-    S.guest = key;
+    S.guest = key === 'link' ? 'whatsapp' : key;
     var wa = key === 'whatsapp';
     $('.mzd-wa').hidden = !wa;
     var fk = null;
@@ -629,9 +744,10 @@
     $$('.mzd-gframe').forEach(function (f) { f.hidden = f.getAttribute('data-key') !== fk; });
     $('.mzd-guest').setAttribute('data-kind', wa ? 'wa' : 'frame');
     $('[data-t="guest"]').textContent = it.label;
-    $('.mzd-subs').innerHTML = key === 'entry' && it.subs.length > 1 ? it.subs.map(function (k) {
-      return '<button type="button" data-sub="' + k + '" aria-pressed="' + (k === fk) + '">' + SUB_LABEL[k] + '</button>';
-    }).join('') : '';
+    $('.mzd-subs').innerHTML = key === 'link' ? '<button type="button" data-act="back-chat">Volver al chat</button>' :
+      key === 'entry' && it.subs.length > 1 ? it.subs.map(function (k) {
+        return '<button type="button" data-sub="' + k + '" aria-pressed="' + (k === fk) + '">' + SUB_LABEL[k] + '</button>';
+      }).join('') : '';
     current();
     if (!quiet) schedulePulse(400);
   }
@@ -786,7 +902,7 @@
           '</b><span>' + (p.price_cents != null ? bs(p.price_cents) + ' al mes' : '') + '</span><small>' + (me ? 'El que estás viendo' : 'Abrir con este plan') + '</small></button>';
       }).join('') + '</div>' +
       '<p class="mzd-mnote">0 % de comisión en todos los planes.</p>' +
-      '<div class="mzd-mf"><button type="button" class="mzd-link" data-act="exit">Ver otro tipo de negocio</button></div>', { label: 'Cambiar de plan' });
+      '<div class="mzd-mf"><button type="button" class="mzd-link" data-act="exit-new">Ver otro tipo de negocio</button></div>', { label: 'Cambiar de plan' });
   }
 
   function confirmRestart() {
@@ -822,6 +938,7 @@
     if (!S || S.expired) return;
     S.expired = true;
     clearTimeout(S.pt);
+    if (S.timeline) S.timeline.stop();
     if (S.ambient) S.ambient.stop();
     if (S.tour) { S.tour.active = false; rail(false); }
     store(null);
@@ -846,13 +963,22 @@
     if (s.pulsing) return schedulePulse();
     s.pulsing = true;
     clearTimeout(s.pt);
-    s.client.pulse(s.sb, s.cursor).then(function (r) {
+    var conv = s.view, st = chatStore(conv);
+    s.client.pulse(s.sb, { conv: conv, cursor: st.cursor }).then(function (r) {
       if (s !== S) return;
       s.pulsing = false;
-      var first = s.cursor == null; // a resumed demo gets its whole conversation back: shown at once
-      if (r.cursor != null) s.cursor = r.cursor;
       if (r.expires_at) s.sb.expires_at = r.expires_at;
-      if (r.messages && r.messages.length) s.phone.add(r.messages, { instant: first });
+      var wa = r.wa || {};
+      if (r.cursor != null) st.cursor = r.cursor;
+      keep(conv, wa.messages || r.messages);
+      if (wa.chats) {
+        s.chats = wa.chats;
+        wa.chats.forEach(function (c) { s.stages[c.conv] = c.stage; });
+        s.phone.setChats(s.chats);
+      }
+      // the stored progress: a reload continues where it was, and nothing is played twice
+      s.timeline.sync(wa.done || {}, wa.stopped || []);
+      s.synced = true;
       observe(r.state || null);
       save();
       schedulePulse();
@@ -864,55 +990,67 @@
     });
   }
 
+  /** What the recorridos watch: the pulse counters plus the board (chats, furthest column, the followed order). */
   function snapshot() {
     if (!S.state) return null;
-    return Object.assign({}, S.state, S.phone ? S.phone.counts() : {});
+    var max = 0;
+    Object.keys(S.stages).forEach(function (k) { max = Math.max(max, tours.rank(S.stages[k])); });
+    var f = S.follow;
+    return Object.assign({}, S.state, {
+      chats: S.chats.length,
+      max_rank: max,
+      f_rank: f ? tours.rank(S.stages[f]) : 0,
+      f_appr: f && S.approved[f] ? 1 : 0,
+    });
   }
 
   function observe(state) {
     if (!S) return;
-    if (state) {
-      var prev = S.state;
-      S.state = state;
-      if (prev) {
-        if ((state.pending || 0) > (prev.pending || 0)) toast('Llegó un pedido nuevo a «Pedidos por confirmar».');
-        else if ((state.to_verify || 0) > (prev.to_verify || 0)) toast('Hay un pago por verificar en la caja.');
-        else if ((state.ready || 0) > (prev.ready || 0)) toast('Un pedido está listo para entregar.');
-      }
-    }
+    if (state) S.state = state;
     var snap = snapshot();
     if (S.tour && snap && S.tour.observe(snap)) schedulePulse(300);
   }
 
-  function toast(text) {
+  /** One toast at a time, 4 s each; a few wait their turn, older ones are dropped. action: 'board' → «Ver el tablero». */
+  function toast(text, action) {
+    if (!S) return;
+    S.toastQ.push({ text: text, action: action });
+    if (S.toastQ.length > 3) S.toastQ.splice(0, S.toastQ.length - 3);
+    if (!S.toastT) nextToast();
+  }
+  function nextToast() {
     var t = $('.mzd-toast');
-    if (!t) return;
-    t.textContent = text;
+    var x = S.toastQ.shift();
+    if (!t || !x) { if (t) t.hidden = true; S.toastT = null; return; }
+    t.innerHTML = '<span>' + esc(x.text) + '</span>' +
+      (x.action === 'board' ? '<button type="button" class="mzd-link" data-act="board">Ver el tablero</button>' : '');
     t.hidden = false;
-    clearTimeout(S.toastT);
-    S.toastT = setTimeout(function () { if (S) t.hidden = true; }, 4500);
+    S.toastT = setTimeout(function () { if (S) nextToast(); }, 4000);
   }
 
   // ---------------------------------------------------------------------------------------------- guide --
 
-  function availableTours() {
-    var venue = esc((S.sb.org && S.sb.org.name) || '');
+  function availableTours(follow) {
     var mods = S.sb.modules || {};
+    var c = (S.sb.wa_timeline || []).filter(function (x) { return x.conv === follow; })[0];
     return tours.toursFor({
       // a menu item (whatsapp, table, cashier…) or a module without an item of its own (customers, inventory)
       on: function (k) {
         var it = findItem(S.menu, k);
         return it ? it.state === 'on' : Boolean(mods[k] && mods[k].on);
       },
-      venue: venue,
+      guest: c ? esc(c.guest_name) : '', // the text goes in as HTML: the name is escaped
       venues: (S.sb.venues || []).length,
     });
   }
 
   function startTour(key) {
-    var t = availableTours().filter(function (x) { return x.key === key; })[0];
+    var follow = tours.pickFollow(S.sb.wa_timeline, S.stages);
+    var t = availableTours(follow).filter(function (x) { return x.key === key; })[0];
     if (!t) return;
     S.welcomeSeen = true;
+    S.follow = t.follow ? follow : null;
+    if (S.follow && S.view !== S.follow) viewChat(S.follow); // the phone shows the order the recorrido follows
     save();
     if (S.tour) S.tour.active = false;
     S.played = {};
@@ -937,8 +1075,9 @@
     if (step.play && !S.played[k]) {
       S.played[k] = true;
       var s = S;
-      s.client.play(s.sb, step.play.script, step.play.step || 0).then(function (r) {
-        if (s === S && r && r.messages) s.phone.add(r.messages);
+      s.client.play(s.sb, step.play).then(function (r) {
+        if (s !== S) return;
+        tell(r, null);
         schedulePulse(300);
       }, function (err) { if (s === S && err && err.expired) expired(); });
     }
@@ -947,6 +1086,7 @@
   function endTour(completed) {
     rail(false);
     S.tour = null;
+    S.follow = null;
     if (completed) toast('Listo. Sigue explorando o elige otro recorrido en «Guía».');
     schedulePulse();
   }
@@ -969,6 +1109,7 @@
     findItem: findItem,
     FramePool: FramePool,
     frameName: frameName,
+    sitePath: sitePath,
     venuesFor: venuesFor,
     waLink: waLink,
     planLabel: planLabel,

@@ -1,6 +1,7 @@
 /* Mezzita · demo vivo · tours.js
-   The recorridos of docs/demo-vivo.md §4 (Guía), the runner that walks them and advances on demo-pulse, and the
-   ambient timeline (the demo comes alive on its own). No DOM here: shell.js draws the rail. */
+   The recorridos of docs/demo-vivo.md §4 (Guía) and the WhatsApp addendum (owner decision D2), the runner that walks
+   them and advances on demo-pulse, the active-time clock, the timeline that plays the 12 scripted WhatsApp
+   conversations beat by beat, and the ambient timeline. No DOM here: shell.js draws everything. */
 (function (root, factory) {
   var mod = factory();
   if (typeof module === 'object' && module.exports) module.exports = mod;
@@ -8,13 +9,18 @@
 })(typeof window !== 'undefined' ? window : globalThis, function () {
   'use strict';
 
-  // Predicates over two snapshots (pulse state + phone counters): "now" against the one taken when the step began.
+  // Predicates over two snapshots (pulse state + WhatsApp progress): "now" against the one taken when the step began.
   function rose(k) { return function (now, base) { return (now[k] || 0) > (base[k] || 0); }; }
   function fell(k) { return function (now, base) { return (now[k] || 0) < (base[k] || 0); }; }
+  function reach(k, v) { return function (now) { return (now[k] || 0) >= v; }; }
   function any() {
     var fs = [].slice.call(arguments);
     return function (now, base) { return fs.some(function (f) { return f(now, base); }); };
   }
+
+  /** The app's WhatsApp board columns in order (wa_conversations.stage); closed ones rank last. */
+  var STAGE_RANK = { nuevo: 1, conversando: 2, pedido: 3, listo: 4, en_camino: 5, entregado: 6, cerrado: 7, no_relevante: 7 };
+  function rank(stage) { return STAGE_RANK[stage] || 0; }
 
   var LINES = {
     owner: 'Todo: ventas en vivo, informes, inventario, clientes, empleados y configuración.',
@@ -28,23 +34,36 @@
   var ROLE_LABEL = { owner: 'Dueño', admin: 'Administrador', cashier: 'Cajero', waiter: 'Mesero', kitchen: 'Cocina', bar: 'Barra', door: 'Puerta' };
 
   /**
-   * The recorridos this sandbox can show. `on(key)` says whether a menu item is usable (shell.js passes its menu);
-   * `venues` is the number of venues. A step: {text, guest?, team?, at?, go?, play?, until?};
-   * `at: 'guest'` marks steps whose action is on the guest's side (the phone layout shows that pane).
+   * The recorridos this sandbox can show. `on(key)` says whether a menu item or module is usable; `venues` is the
+   * number of venues; `guest` the name of the WhatsApp guest the order recorrido follows. A step: {text, guest?,
+   * team?, at?, go?, play?, until?, follow?}; `at: 'guest'` marks steps whose action is on the guest's side (the phone
+   * layout shows that pane); `follow` asks the shell to pick the order conversation to follow.
    */
   function toursFor(ctx) {
-    var on = ctx.on, venue = ctx.venue || 'el local', list = [];
+    var on = ctx.on, list = [];
+    var guest = ctx.guest || 'Tu cliente';
     var bar = on('bar');
     if (on('whatsapp')) {
       list.push({
-        key: 'whatsapp', title: 'Un pedido por WhatsApp', line: 'Tu cliente escribe, el asistente toma el pedido y llega a tu caja.',
+        key: 'wa-solo', title: 'Mira tu WhatsApp trabajar solo', line: 'Doce clientes escriben y el asistente atiende cada chat.',
         steps: [
-          { at: 'guest', guest: 'whatsapp', team: 'cashier', text: 'Tú eres el cliente. Toca el primer mensaje de abajo para escribirle a ' + venue + ' por WhatsApp.', until: rose('phone_out') },
-          { at: 'guest', guest: 'whatsapp', team: 'cashier', text: 'El asistente responde con la carta de hoy y arma el pedido. Sigue tocando los mensajes hasta «Sí, confirmo».', until: rose('pending') },
-          { guest: 'whatsapp', team: 'cashier', go: '/pos', text: 'Ahora eres el cajero: el pedido está en «Pedidos por confirmar». Acéptalo.', until: any(fell('pending'), rose('in_kitchen')) },
-          { guest: 'whatsapp', team: 'kitchen', text: 'En la cocina aparece el pedido. Márcalo como listo.', until: rose('ready') },
-          { at: 'guest', guest: 'whatsapp', team: 'kitchen', text: 'Tu cliente recibe por WhatsApp el aviso de que su pedido está listo, sin que nadie lo escriba.', until: rose('phone_in') },
-          { guest: 'whatsapp', team: 'owner', go: '/dashboard', text: 'Y tú, el dueño, ves la venta en «En vivo», junto con todo lo demás del día.' },
+          { guest: 'whatsapp', team: 'owner', go: '/whatsapp', text: 'Este es el tablero de WhatsApp de tu negocio. En unos segundos empiezan a escribir clientes y el asistente les responde solo.', until: rose('chats') },
+          { guest: 'whatsapp', team: 'owner', go: '/whatsapp', text: 'Cada tarjeta avanza sola por las columnas: «Nuevo lead», «En conversación», «Pedido en curso», «Pedido listo» y «Entregado».', until: reach('max_rank', 3) },
+          { at: 'guest', guest: 'whatsapp', team: 'owner', text: 'En el celular ves lo que ve tu cliente. Arriba eliges de quién es el chat.' },
+          { guest: 'whatsapp', team: 'owner', go: '/whatsapp', text: 'Si un cliente pide hablar con una persona, su chat queda en «Sin respuesta» hasta que tú le contestes.' },
+          { guest: 'whatsapp', team: 'cashier', go: '/pos', text: 'Los pedidos llegan a la caja y a la cocina sin que nadie los escriba. Sigue explorando: los chats siguen solos unos minutos.' },
+        ],
+      });
+      list.push({
+        key: 'whatsapp', title: 'Un pedido por WhatsApp', line: 'Un cliente pide, la caja acepta, la cocina prepara y el aviso le llega solo.', follow: true,
+        steps: [
+          { at: 'guest', guest: 'whatsapp', team: 'owner', text: guest + ' escribe por WhatsApp. Mira el celular: el asistente le responde solo.', until: reach('f_rank', 1) },
+          { guest: 'whatsapp', team: 'owner', go: '/whatsapp', text: 'En el tablero de WhatsApp aparece su tarjeta en «Nuevo lead» y pasa a «En conversación» cuando vuelve a escribir.', until: reach('f_rank', 2) },
+          { guest: 'whatsapp', team: 'owner', go: '/whatsapp', text: 'El asistente arma el pedido: la tarjeta dice «Armando pedido» y después muestra el número de pedido.', until: reach('f_rank', 3) },
+          { guest: 'whatsapp', team: 'cashier', go: '/pos', text: 'Ahora eres el cajero: el pedido está en «Pedidos por confirmar». Acéptalo, o espera: en la demo se acepta solo.', until: any(reach('f_appr', 1), fell('pending'), reach('f_rank', 4)) },
+          { guest: 'whatsapp', team: 'kitchen', text: 'En la cocina aparece el pedido. Márcalo como listo, o espera: en la demo la cocina avanza sola.', until: reach('f_rank', 4) },
+          { at: 'guest', guest: 'whatsapp', team: 'owner', go: '/whatsapp', text: guest + ' recibe «Tu pedido está listo» por WhatsApp. En el tablero, la tarjeta pasa a «Pedido listo» y después a «Entregado».', until: reach('f_rank', 6) },
+          { guest: 'whatsapp', team: 'owner', go: '/dashboard', text: 'Y en «En vivo» ya está la venta, junto con todo lo demás del día.' },
         ],
       });
     }
@@ -91,8 +110,11 @@
     if (on('tickets')) {
       var door = on('door');
       var steps = [{ at: 'guest', guest: 'tickets', team: door ? 'door' : 'owner', text: 'Compra una entrada como lo haría tu cliente, desde su celular.' }];
-      if (door) steps.push({ guest: 'entry', team: 'door', play: { script: 'door_checkin', step: 0 }, text: 'En la puerta se valida la entrada con el celular. Acaba de entrar alguien.' });
-      if (on('entry') && bar) steps.push({ guest: 'entry', team: 'bar', play: { script: 'wristband', step: 0 }, text: 'Con la manilla se recarga saldo y se cobra en la barra, sin efectivo.' });
+      if (door) steps.push({ guest: 'entry', team: 'door', play: { script: 'door_checkin' }, text: 'En la puerta se valida la entrada con el celular. Acaba de entrar alguien.' });
+      if (on('wristbands')) {
+        steps.push({ guest: 'entry', team: door ? 'door' : 'owner', play: { script: 'wristband', step: 0 }, text: 'Se carga saldo a la manilla al entrar.' });
+        if (bar) steps.push({ guest: 'entry', team: 'bar', play: { script: 'wristband', step: 1 }, text: 'En la barra se cobra con la manilla, sin efectivo.' });
+      }
       steps.push({ team: 'owner', go: '/dashboard', text: 'Y tú ves la «Noche en curso»: entradas vendidas, puerta, barra y caja.' });
       list.push({ key: 'noche', title: 'Una noche con entradas', line: 'Entradas, puerta, manillas y barra en una sola noche.', steps: steps });
     }
@@ -107,6 +129,16 @@
       });
     }
     return list.filter(function (t) { return t.steps.length; });
+  }
+
+  /**
+   * The order conversation the recorrido «Un pedido por WhatsApp» follows: conversation 1 unless it is already past
+   * its first steps, then the next order conversation that has not reached «En conversación» (addendum §7, L6).
+   */
+  function pickFollow(timeline, stages) {
+    var orders = (timeline || []).filter(function (c) { return /^order_/.test(c.kind); });
+    for (var i = 0; i < orders.length; i++) if (rank(stages[orders[i].conv]) < 2) return orders[i].conv;
+    return orders.length ? orders[0].conv : 1;
   }
 
   /**
@@ -163,12 +195,122 @@
   };
 
   /**
-   * The ambient timeline: the first event 20 s after the demo opens, then one every 45 to 90 s, each at most once,
-   * capped at 12. Pauses while the tab is hidden (hold()/release()). Timers and randomness are injectable for tests.
+   * Seconds the demo has been on screen: it stops while the tab is hidden and goes on from a stored value after a
+   * reload (addendum §5). `speed` > 1 only for tests on the mock.
+   */
+  function ActiveClock(opts) {
+    opts = opts || {};
+    this.perf = opts.perf || function () { return Date.now(); };
+    this.speed = opts.speed || 1;
+    this.ms = opts.from || 0;
+    this.since = null;
+  }
+  ActiveClock.prototype.start = function () { if (this.since === null) this.since = this.perf(); };
+  ActiveClock.prototype.pause = function () {
+    if (this.since !== null) { this.ms += (this.perf() - this.since) * this.speed; this.since = null; }
+  };
+  ActiveClock.prototype.now = function () {
+    return this.ms + (this.since === null ? 0 : (this.perf() - this.since) * this.speed);
+  };
+
+  /**
+   * Plays the 12 scripted conversations (demo-start's wa_timeline: [{conv, kind, guest_name, start_s, beats:
+   * [{after_s, hold_s?, type}]}]). Beat 0 is due at start_s; beat n at (when n−1 finished) + after_s + hold_s, on the
+   * active clock. One request in flight per conversation. A stopped conversation is never played again; module_off
+   * pauses everything and retries; an expired sandbox ends it. opts: {now() → active ms, play(conv, beat) → Promise,
+   * onResult(conv, r), onError(conv, err), retryMs, offMs}.
+   */
+  function WaTimeline(timeline, opts) {
+    opts = opts || {};
+    this.opts = opts;
+    this.now = opts.now;
+    this.list = (timeline || []).map(function (c) {
+      return { c: c, next: 0, at: 0, busy: false, stopped: false, finished: !(c.beats && c.beats.length), retryAt: 0 };
+    });
+    this.pausedUntil = 0;
+    this.ended = false;
+  }
+  WaTimeline.prototype.get = function (conv) {
+    for (var i = 0; i < this.list.length; i++) if (this.list[i].c.conv === conv) return this.list[i];
+    return null;
+  };
+  /** The active ms at which the conversation's next beat is due (Infinity when there is none). */
+  WaTimeline.prototype.due = function (st) {
+    var b = st.c.beats[st.next];
+    if (!b || st.stopped || st.finished) return Infinity;
+    var gap = ((b.after_s || 0) + (b.hold_s || 0)) * 1000;
+    var t = st.next === 0 ? (st.c.start_s || 0) * 1000 + gap : st.at + gap;
+    return Math.max(t, st.retryAt);
+  };
+  /**
+   * Adopts the server's progress (demo-pulse wa.done / wa.stopped): never moves a conversation back. A conversation
+   * moved forward counts its last beat as done now, so the next one keeps its own spacing.
+   */
+  WaTimeline.prototype.sync = function (done, stopped) {
+    var t = this.now();
+    var self = this;
+    this.list.forEach(function (st) {
+      var d = done && done[st.c.conv];
+      if (d != null && d + 1 > st.next && !st.busy) {
+        st.next = d + 1;
+        st.at = t;
+        if (st.next >= st.c.beats.length) st.finished = true;
+      }
+      if (stopped && stopped.indexOf(st.c.conv) >= 0) st.stopped = true;
+    });
+    return self;
+  };
+  /** Fires every beat that is due; returns the conversations fired. */
+  WaTimeline.prototype.tick = function () {
+    if (this.ended) return [];
+    var t = this.now();
+    if (t < this.pausedUntil) return [];
+    var fired = [];
+    var self = this;
+    this.list.forEach(function (st) {
+      if (st.busy || st.stopped || st.finished) return;
+      if (t >= self.due(st)) { self.fire(st); fired.push(st.c.conv); }
+    });
+    return fired;
+  };
+  WaTimeline.prototype.fire = function (st) {
+    var self = this, n = st.next, o = this.opts;
+    st.busy = true;
+    return Promise.resolve().then(function () { return o.play(st.c.conv, n); }).then(function (r) {
+      st.busy = false;
+      if (self.ended) return;
+      st.retryAt = 0;
+      st.next = n + 1;
+      st.at = self.now();
+      if (r && r.stopped) st.stopped = true;
+      if ((r && (r.done || r.next === null)) || st.next >= st.c.beats.length) st.finished = true;
+      if (o.onResult) o.onResult(st.c, r || {});
+    }, function (err) {
+      st.busy = false;
+      var code = err && err.code;
+      var t = self.now();
+      if (code === 'conversation_stopped' || code === 'beat_failed') st.stopped = true;
+      else if (code === 'module_off') self.pausedUntil = t + (o.offMs || 20000);
+      else if (err && err.expired) self.ended = true;
+      else if (code === 'beat_out_of_order') st.retryAt = t + 1000; // the next pulse's sync moves it on
+      else st.retryAt = t + (code === 'beat_running' ? 1500 : o.retryMs || 5000);
+      if (o.onError) o.onError(st.c, err);
+    });
+  };
+  WaTimeline.prototype.stop = function () { this.ended = true; };
+  /** Every conversation has finished or stopped. */
+  WaTimeline.prototype.over = function () {
+    return this.list.every(function (st) { return st.finished || st.stopped; });
+  };
+
+  /**
+   * The ambient timeline (web-menu orders, reservations, waiter calls; at most 6): the first event 20 s after the demo
+   * opens, then one every 45 to 90 s, each at most once. Pauses while the tab is hidden (hold()/release()). Timers and
+   * randomness are injectable for tests.
    */
   function Ambient(events, play, opts) {
     opts = opts || {};
-    this.events = (events || []).slice(0, opts.cap || 12);
+    this.events = (events || []).slice(0, opts.cap || 6);
     this.play = play;
     this.next = opts.from || 0;
     this.first = opts.first == null ? 20000 : opts.first;
@@ -212,5 +354,9 @@
     this.timer = null;
   };
 
-  return { toursFor: toursFor, TourRunner: TourRunner, Ambient: Ambient, rose: rose, fell: fell, any: any, LINES: LINES, ROLE_LABEL: ROLE_LABEL };
+  return {
+    toursFor: toursFor, pickFollow: pickFollow, TourRunner: TourRunner, ActiveClock: ActiveClock, WaTimeline: WaTimeline,
+    Ambient: Ambient, rose: rose, fell: fell, reach: reach, any: any, rank: rank, STAGE_RANK: STAGE_RANK,
+    LINES: LINES, ROLE_LABEL: ROLE_LABEL,
+  };
 });

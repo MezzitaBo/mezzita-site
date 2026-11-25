@@ -44,7 +44,8 @@ function serve(root, port) {
 }
 
 async function openShell(page, sc) {
-  await page.goto(`${BASE}/demo/?backend=${BACKEND}`, { waitUntil: "load" });
+  // On the mock the 12 WhatsApp conversations play 10 times faster, so a run sees the board move.
+  await page.goto(`${BASE}/demo/?backend=${BACKEND}${BACKEND === "mock" ? "&demo_speed=10" : ""}`, { waitUntil: "load" });
   await page.addStyleTag({ content: "*{transition:none!important;animation:none!important}" });
   const ready = await page.evaluate(() => Boolean(document.getElementById("demo-vivo") && window.MezzitaDemo && window.MezzitaDemo.open));
   if (!ready) {
@@ -91,7 +92,8 @@ const overflow = (page) => page.evaluate(() => document.documentElement.scrollWi
       const errs = [];
       const shot = async (name) => { const f = path.join(OUT, `${sc.id}-${w}${name ? "-" + name : ""}.png`); await page.screenshot({ path: f }); files.push(f); };
       page.on("pageerror", (e) => errs.push(e.message));
-      page.on("console", (m) => m.type() === "error" && !/fonts\.g|favicon/.test(m.text()) && errs.push(m.text()));
+      // /demo/sitio/ is L7's page (its own PR): until it is merged it answers 404 inside the phone.
+      page.on("console", (m) => m.type() === "error" && !/fonts\.g|favicon/.test(m.text()) && !/\/demo\/sitio\//.test((m.location() || {}).url || "") && errs.push(m.text()));
       try {
         await openShell(page, sc);
         // first open: the «¿Cómo quieres verlo?» card
@@ -154,31 +156,29 @@ const overflow = (page) => page.evaluate(() => document.documentElement.scrollWi
         }
 
         if (w === 1440 && BACKEND === "mock") {
-          // the WhatsApp recorrido end to end on the mock
+          // D2: the 12 conversations play by themselves; the phone shows conversation 1, the board fills up
+          await page.click('.mzd-menu [data-item="whatsapp"]');
+          await page.click('.mzd-menu [data-item="owner"]');
+          await page.mouse.move(w - 10, h - 10);
+          const chat = await page.waitForSelector(".mzp-msg", { timeout: 15000 }).catch(() => null);
+          if (!chat) note(where, "no WhatsApp message reached the phone");
+          if (await page.isEnabled(".mzp-in input")) note(where, "the phone's input should be read-only");
+          await page.waitForTimeout(6000);
+          const board = await page.frameLocator('iframe[name="mz-demo:owner"]').locator(".col span").count().catch(() => 0);
+          if (!board) note(where, "the owner's WhatsApp board stayed empty");
+          await shot("whatsapp");
+          // the WhatsApp recorrido end to end, following an order chat; nobody touches anything: the demo
+          // accepts it, the kitchen marks it ready, the notice reaches the phone
           await page.click('.mzd-top [data-act="guide"]');
           const wa = await page.$('.mzd-modal [data-tour="whatsapp"]');
           if (wa) {
             await wa.click();
-            const frame = (role) => page.frameLocator(`iframe[name="mz-demo:${role}"]`);
-            const waitStep = (n) => page.waitForFunction((x) => document.querySelector(".mzd-rail-k").textContent.includes(`paso ${x} de`), n, { timeout: 20000 });
+            const waitStep = (n, ms) => page.waitForFunction((x) => document.querySelector(".mzd-rail-k").textContent.includes(`paso ${x} de`), n, { timeout: ms || 45000 });
             await shot("recorrido-1");
-            for (let i = 0; i < 6; i++) {
-              const chip = await page.waitForSelector(".mzp-chips button:not([disabled])", { timeout: 8000 }).catch(() => null);
-              if (!chip) break;
-              await chip.click();
-              await page.waitForTimeout(2600);
-              if (/paso 3 de/.test(await page.textContent(".mzd-rail-k"))) break;
-            }
-            await waitStep(3);
-            await shot("recorrido-3");
-            await frame("cashier").locator('[data-act="accept"]').first().click();
             await waitStep(4);
-            for (let i = 0; i < 4; i++) {
-              await frame("kitchen").locator('[data-act="ready"]').first().click().catch(() => {});
-              await page.waitForTimeout(700);
-            }
-            await waitStep(6);
-            await shot("recorrido-6");
+            await shot("recorrido-4");
+            await waitStep(7, 60000);
+            await shot("recorrido-7");
             await page.click('[data-act="tour-next"]');
             if (await page.isVisible(".mzd-rail")) note(where, "the recorrido did not end");
           } else note(where, "no WhatsApp recorrido");
