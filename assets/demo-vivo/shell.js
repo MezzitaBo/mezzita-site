@@ -299,6 +299,7 @@
         s.ambientNext = opts.saved.ambientNext || 0;
         s.clockMs = opts.saved.clockMs || 0;
         s.view = opts.saved.view || 1;
+        s.waSaved = opts.saved.wa || null;
         if (opts.saved.guest) s.guest = opts.saved.guest;
         if (opts.saved.team) s.team = opts.saved.team;
       }
@@ -360,6 +361,7 @@
       backend: S.backend, params: S.params, sb: S.sb, welcomeSeen: S.welcomeSeen,
       ambientNext: S.ambient ? S.ambient.next : S.ambientNext, guest: S.guest, team: S.team,
       clockMs: S.clock ? Math.round(S.clock.now()) : S.clockMs, view: S.view,
+      wa: S.timeline ? S.timeline.progress() : S.waSaved || null,
     });
   }
 
@@ -500,6 +502,7 @@
       onResult: onBeat,
       onError: function (c, err) { if (err && err.expired) expired(); },
     });
+    if (S.waSaved) S.timeline.sync(S.waSaved.done, S.waSaved.stopped); // the progress this tab had before a reload
     S.tickT = setInterval(function () { if (S && S.synced && !D.hidden) S.timeline.tick(); }, 500);
 
     S.phone.show(S.view, []);

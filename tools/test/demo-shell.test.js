@@ -360,6 +360,21 @@ test("timeline: sync adopts the stored progress after a reload and never moves b
   assert.equal(tl.get(1).finished, true, "an older pulse does not move it back");
 });
 
+test("timeline: progress() is what sync() takes back after a reload", async () => {
+  const clock = fakeNow();
+  const beats = [{ after_s: 0 }, { after_s: 0 }, { after_s: 0 }];
+  const play = (c, b) => Promise.resolve(c === 2 ? { ok: true, stopped: true, next: 1 } : { ok: true, next: b + 1 });
+  const a = new tours.WaTimeline([conv(1, 0, beats), conv(2, 0, beats)], { now: clock.now, play });
+  clock.set(1); a.tick(); await flush();
+  clock.add(1); a.tick(); await flush();
+  assert.deepEqual(a.progress(), { done: { 1: 1, 2: 0 }, stopped: [2] });
+  const played = [];
+  const b = new tours.WaTimeline([conv(1, 0, beats), conv(2, 0, beats)], { now: clock.now, play: (c, n) => { played.push([c, n]); return play(c, n); } });
+  b.sync(a.progress().done, a.progress().stopped);
+  clock.add(1); b.tick(); await flush();
+  assert.deepEqual(played, [[1, 2]], "no beat played twice, the stopped one stays stopped");
+});
+
 test("active clock: counts only while running, from a stored value, at the test speed", () => {
   let t = 0;
   const c = new tours.ActiveClock({ perf: () => t, from: 5000 });

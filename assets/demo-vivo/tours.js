@@ -301,6 +301,16 @@
     });
   };
   WaTimeline.prototype.stop = function () { this.ended = true; };
+  /** {done: {conv: last beat done}, stopped: [conv]}: kept in sessionStorage so a reload continues even before the
+   * server reports its own progress. */
+  WaTimeline.prototype.progress = function () {
+    var done = {}, stopped = [];
+    this.list.forEach(function (st) {
+      if (st.next > 0) done[st.c.conv] = st.next - 1;
+      if (st.stopped) stopped.push(st.c.conv);
+    });
+    return { done: done, stopped: stopped };
+  };
   /** Every conversation has finished or stopped. */
   WaTimeline.prototype.over = function () {
     return this.list.every(function (st) { return st.finished || st.stopped; });
