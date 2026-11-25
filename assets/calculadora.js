@@ -28,6 +28,11 @@
   }
   if(typeof module !== 'undefined' && module.exports){ module.exports = {calc: calc, cost: cost, PLANS: PLANS, setSetup: function(n){ SETUP = n; }}; return; }
   var box = document.querySelector('[data-install]'); if(box) SETUP = +box.getAttribute('data-install') || 0;
+  /* Las mensualidades también salen de precios.json (data-mes en cada botón de plan). */
+  document.querySelectorAll('[data-cplan][data-mes]').forEach(function(b){
+    var k = b.getAttribute('data-cplan'), n = +b.getAttribute('data-mes').replace(/\./g, '');
+    if(PLANS[k] && n > 0) PLANS[k].mes = n;
+  });
 
   var $ = function(id){ return document.getElementById(id); };
   var fmt = function(n){ return Math.round(n).toLocaleString('es-BO') + ' Bs'; };
