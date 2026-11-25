@@ -1,0 +1,13 @@
+{
+  "_nota": "Precios de Mezzita en un solo lugar. build.py cambia {{precio:clave}} en las páginas y tools/gen/gen.js los usa en el contrato. Cambia el valor aquí y vuelve a construir.",
+  "install": "3.500",
+  "install_num": 3500,
+  "credit_month": "200",
+  "recover_month": "30",
+  "wa_msg": "1,5",
+  "wa_pack": "150",
+  "wa_pack_msgs": "100",
+  "promo_arranca": "250",
+  "promo_crece": "300",
+  "promo_days": "90"
+}

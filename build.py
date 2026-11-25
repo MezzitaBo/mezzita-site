@@ -10,6 +10,8 @@ import datetime, json, os, re, shutil, sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC, ASSETS = os.path.join(ROOT, "src"), os.path.join(ROOT, "assets")
+# Precios en un solo archivo: las páginas usan {{precio:clave}}; tools/gen/gen.js lee el mismo JSON.
+PRECIOS = json.load(open(os.path.join(SRC, "_data", "precios.json"), encoding="utf8"))
 SITE = os.environ.get("SITE_URL", "https://mezzita.com").rstrip("/")
 BASE = os.environ.get("SITE_BASE", "").rstrip("/")  # solo para servir en un subdirectorio
 
@@ -49,7 +51,7 @@ SERVICE = {"@context": "https://schema.org", "@type": "Service", "name": "Pedido
                 "priceSpecification": {"@type": "UnitPriceSpecification", "price": "600", "priceCurrency": "BOB", "unitCode": "MON"}},
                {"@type": "Offer", "name": "Plan Escala", "price": "900", "priceCurrency": "BOB",
                 "priceSpecification": {"@type": "UnitPriceSpecification", "price": "900", "priceCurrency": "BOB", "unitCode": "MON"}},
-               {"@type": "Offer", "name": "Instalación, precio de lanzamiento", "price": "2900", "priceCurrency": "BOB", "priceValidUntil": "2026-11-30"}]}
+               {"@type": "Offer", "name": "Instalación", "price": str(PRECIOS["install_num"]), "priceCurrency": "BOB"}]}
 
 
 def site_ld(meta):
@@ -130,7 +132,7 @@ def layout(meta, body):
 <div><h4>Sitio</h4><a href="/funciones/">Funciones</a><a href="/planes/">Precios</a><a href="/demo/">Demo de pedidos</a><a href="/diagnostico/">Radiografía de tu ficha</a><a href="/calculadora/">Calculadora de pérdida</a><a href="/empezar/">Qué necesitas entregar</a><a href="/blog/">Blog</a><a href="https://app.mezzita.com/login">Ingresar a mi panel</a></div>
 <div><h4>Legal</h4><a href="/terminos/">Términos del servicio</a><a href="/privacidad/">Privacidad</a><a href="/cookies/">Cookies</a><a href="/garantias/">Garantías</a><a href="/assets/docs/contrato-modelo-mezzita.pdf" target="_blank" rel="noopener">Contrato modelo (PDF)</a></div>
 <div><h4>Hablemos</h4><a data-wa="Hola, quiero hablar con alguien del equipo de Mezzita." href="https://wa.me/59162506518">WhatsApp +591 62506518</a><a href="mailto:hola@mezzita.com">hola@mezzita.com</a></div>
-<div><h4>Socios</h4><p class="muted">Cobros y facturación con CUCU.</p><a class="ft-levi" href="https://levisoft.pro" target="_blank" rel="noopener"><span class="muted">Ingeniería de</span><img src="/assets/logos/levisoft-logo-light.webp" alt="Levisoft" width="1825" height="393" loading="lazy"></a></div>
+<div><h4>Socios</h4><a class="ft-levi" href="https://levisoft.pro" target="_blank" rel="noopener"><span class="muted">Ingeniería de</span><img src="/assets/logos/levisoft-logo-light.webp" alt="Levisoft" width="1825" height="393" loading="lazy"></a></div>
 <p class="legal">© <span data-year>2026</span> Mezzita · NIT 6734852019 · La Paz, Bolivia. Los resultados dependen de cada negocio, su rubro y su ciudad. Las garantías aplican según las condiciones escritas en tu contrato.</p>
 </div></footer>
 <a class="wa-float" data-wa="Hola, vengo de la web de Mezzita." href="https://wa.me/59162506518" aria-label="Escribir por WhatsApp">{WA_ICON}<span>Escríbenos por WhatsApp</span></a>
@@ -146,6 +148,11 @@ def layout(meta, body):
 PARTIALS = os.path.join(SRC, "_partials")
 
 
+def precios(text):
+    """Sustituye {{precio:clave}} por el valor de src/_data/precios.json."""
+    return re.sub(r"\{\{precio:([a-z_]+)\}\}", lambda m: str(PRECIOS[m.group(1)]), text)
+
+
 def include(html):
     """Sustituye {{include:nombre}} por src/_partials/nombre.html (una pasada basta)."""
     def rep(m):
@@ -154,6 +161,7 @@ def include(html):
             sys.exit(f"partial no encontrado: {m.group(1)}")
         return open(f, encoding="utf8").read()
     html = re.sub(r"\{\{include:([a-z0-9_-]+)\}\}", rep, html)
+    html = precios(html)
     return re.sub(r"\{\{icon:([a-z]+)\}\}", lambda m: icon_svg(m.group(1)), html)
 
 
@@ -245,7 +253,7 @@ def read_posts():
             if not m:
                 sys.exit(f"blog/{rubro}/{name}: falta el comentario de metadatos")
             try:
-                meta = json.loads(m.group(1))
+                meta = json.loads(precios(m.group(1)))
             except json.JSONDecodeError as e:
                 sys.exit(f"blog/{rubro}/{name}: metadatos inválidos ({e})")
             slug = name[:-5]
@@ -292,7 +300,7 @@ def render_post(meta, body, all_posts):
     cta_msg = f"Hola, leí «{h1}» en el blog de Mezzita y quiero saber cómo aplicarlo a mi negocio. Rubro: ___ Ciudad: ___"
     cta_html = (f'<aside class="post-cta night-card"><div><p class="eyebrow">{esc(cta_label)}</p>'
                 f'<h2>Tu carta en un QR, en 7 días hábiles.</h2>'
-                f'<p>Menú web propio donde tu cliente pide desde su celular, en el local, para llevar o a domicilio. Desde 400 Bs al mes, 0 % sobre lo que cobras en tu local con tu QR o en efectivo. Si no estás en línea en 7 días hábiles, tu primer mes es gratis.</p></div>'
+                f'<p>Menú web propio donde tu cliente pide desde su celular, en el local, para llevar o a domicilio. Desde 400 Bs al mes y 0 % de comisión, en la mesa, para llevar y a domicilio. Si no estás en línea en 7 días hábiles, tu primer mes es gratis.</p></div>'
                 f'<div class="cta-row"><a class="btn btn-sun" data-wa="{esc(cta_msg)}" href="https://wa.me/59162506518">Hablar por WhatsApp</a>'
                 f'<a class="link-dark" href="{cta_href}">{"Probar la demo" if demo_key else "Revisar mi ficha gratis"}</a></div></aside>')
     toc = re.findall(r"<h2(?: id=\"([^\"]*)\")?>(.*?)</h2>", body)
@@ -376,7 +384,7 @@ def read_pages():
         m = re.match(r"\s*<!--(\{.*?\})-->\s*", raw, re.S)
         if not m:
             sys.exit(f"{name}: falta el comentario de metadatos")
-        meta = json.loads(m.group(1))
+        meta = json.loads(precios(m.group(1)))
         pages.append((meta, include(raw[m.end():])))
     return pages
 
@@ -456,12 +464,12 @@ def llms_txt(pages):
     posts = [m for m, _ in pages if m["path"].startswith("/blog/") and m.get("rubro")]
     line = lambda m: f"- [{m['title'].split(' · ')[0].split(' | ')[0]}]({SITE}{m['path']}): {m['desc']}"
     out = ["# Mezzita", "",
-           "> Mezzita instala en negocios de comida de Bolivia un menú web propio donde el cliente pide y paga desde su celular: QR por mesa, delivery y recojo, cobro por QR bancario en el navegador y Panel de pedidos y caja. Es el equipo detrás de Levisoft, con diez años construyendo sitios y sistemas.", "",
+           "> Mezzita instala en negocios de comida de Bolivia un menú web propio donde el cliente pide y paga desde su celular: QR por mesa, delivery y recojo, cobro con el QR del banco del propio local, 0 % de comisión, y Panel de pedidos y caja. Es el equipo detrás de Levisoft, con diez años construyendo sitios y sistemas.", "",
            "## Producto y precio", "",
            "- Producto: Pedidos con QR, para pizzerías, heladerías, restaurantes, bares, cafés y franquicias en Bolivia. Tres planes al mes: Arranca 400 Bs, Crece 600 Bs (QR por mesa, plano de mesas, reservas e inventario por receta) y Escala 900 Bs (hasta 3 sucursales, factura electrónica al costo, gerente de cuenta). Para discotecas y eventos, Plan Noche, que se cotiza.",
-           "- Instalación: 2.900 Bs hasta el 30 de noviembre de 2026; desde el 1 de diciembre de 2026, 3.500 Bs. Precios con IVA incluido.",
-           "- Comisión: solo cuando el pago pasa por el sistema y se verifica solo. 0 % sobre lo cobrado en el local con el QR del propio negocio o en efectivo. Delivery y recojo: 6 % (Arranca), 5 % (Crece), 4 % (Escala). Mesa con cobro verificado, opcional: 4,5 % (Crece), 3,5 % (Escala). Incluye la comisión del procesador y no se aplica sobre el costo de envío.",
-           "- WhatsApp: tablero de chats y asistente con IA opcional que responde y arma pedidos; avisos de estado del pedido incluidos; saldo inicial de promociones de 250 o 300 Bs (vence a los 90 días) y recargas a 1,5 Bs por mensaje, solo a clientes que dieron permiso.",
+           f"- Instalación: {PRECIOS['install']} Bs, igual en los tres planes. Precios con IVA incluido.",
+           "- Comisión: 0 % siempre, en la mesa, en el mostrador, para llevar y a domicilio. El cliente paga con el QR del banco del local o en efectivo; el dinero va directo a la cuenta del local y la caja confirma el pago en el panel.",
+           f"- WhatsApp: tablero de chats y asistente con IA opcional que responde y arma pedidos; avisos de estado del pedido incluidos; saldo inicial de promociones de {PRECIOS['promo_arranca']} o {PRECIOS['promo_crece']} Bs (vence a los {PRECIOS['promo_days']} días) y recargas a {PRECIOS['wa_msg']} Bs por mensaje, solo a clientes que dieron permiso.",
            "- Permanencia: mes a mes con 30 días de aviso, o contrato de 12 meses con dominio .com e Instalación de vuelta (desde el mes 13, hasta 200 Bs por mes de descuento hasta cubrir la instalación).",
            "- Garantía: menú, QR y panel activos en 7 días hábiles o el primer mes es gratis.",
            "- No incluye: gestión de la ficha de Google Maps del negocio, repartidores ni impresora térmica.",

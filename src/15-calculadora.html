@@ -15,7 +15,7 @@
 </div></section>
 
 <section class="sec" style="padding-top:1rem"><div class="wrap">
-  <div class="calc2">
+  <div class="calc2" data-install="{{precio:install_num}}">
     <div class="calc2-in">
       <p class="eyebrow" id="c-intro-eyebrow">Tus números</p>
       <p class="muted" id="c-intro"></p>
@@ -32,19 +32,19 @@
     <div class="calc2-out glass-dark">
       <p class="eyebrow" style="color:var(--sun)">Lo que se quedaría la app cada mes</p>
       <b class="c-big num" id="c-total">0 Bs</b>
-      <p class="c-year">Unos <b class="num" id="c-year">0 Bs</b> al año, solo en comisión de delivery y recojo.</p>
+      <p class="c-year">Unos <b class="num" id="c-year">0 Bs</b> al año, solo en comisión de la app por delivery y recojo.</p>
       <div class="c-break" id="c-break"></div>
       <div class="c-vs">
-        <div><small>Pagarías a Mezzita al mes</small><b class="num" id="c-cost">0 Bs</b><span id="c-cost-d">mensualidad más comisión</span></div>
+        <div><small>Pagarías a Mezzita al mes</small><b class="num" id="c-cost">0 Bs</b><span id="c-cost-d">solo la mensualidad, 0 % de comisión</span></div>
         <div><small>Plan</small><b id="c-plan">Arranca</b><span id="c-plan-d">el más barato para tus números</span></div>
-        <div><small>Diferencia a tu favor, al mes</small><b class="num" id="c-net">0 Bs</b><span id="c-net-d">lo que se queda la app menos lo que nos pagarías por esos mismos pedidos</span></div>
-        <div><small>La instalación se paga en</small><b class="num" id="c-months">-</b><span id="c-months-d">con 2.900 Bs de lanzamiento</span></div>
+        <div><small>Diferencia a tu favor, al mes</small><b class="num" id="c-net">0 Bs</b><span id="c-net-d">lo que se queda la app menos tu mensualidad</span></div>
+        <div><small>La instalación se paga en</small><b class="num" id="c-months">-</b><span id="c-months-d">con {{precio:install}} Bs de instalación</span></div>
       </div>
       <div class="cta-row">
         <a class="btn btn-primary" id="c-wa" data-wa="" href="https://wa.me/59162506518" target="_blank" rel="noopener">Quiero esto en mi local</a>
         <a class="link-dark" href="/demo/" id="c-demo">Ver cómo funciona</a>
       </div>
-      <p class="fine" style="color:var(--on-night-2)">Es una estimación con los datos que tú pusiste. Sirve para decidir si vale la pena hablar, no como promesa de resultado. Precios con IVA incluido. Nuestra comisión ya incluye la del procesador de pagos y se calcula sobre la comida, nunca sobre el envío. Instalación de 2.900 Bs hasta el 30 de noviembre de 2026; desde el 1 de diciembre, 3.500 Bs.</p>
+      <p class="fine" style="color:var(--on-night-2)">Es una estimación con los datos que tú pusiste. Sirve para decidir si vale la pena hablar, no como promesa de resultado. Precios con IVA incluido. Mezzita cobra 0 % de comisión en todos los canales. Instalación de {{precio:install}} Bs, igual en los tres planes.</p>
     </div>
   </div>
 </div></section>
@@ -52,7 +52,7 @@
 <section class="sec-tight"><div class="wrap">
   <div class="grid-3 howcalc">
     <div><span class="gi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V9M10 19V5M16 19v-8M22 19H2"/></svg></span><b>Cómo calculamos lo que se queda la app</b><p>Pedidos de delivery y recojo del mes, por tu ticket promedio sin envío, por la comisión que te cobra la app. Si no la conoces, revisa tu liquidación: según la región suele estar entre 20 y 30 %. Sin factores ocultos.</p></div>
-    <div><span class="gi" aria-hidden="true">{{icon:qr}}</span><b>Cómo calculamos lo que nos pagarías</b><p>Cobramos comisión solo cuando el pago pasa por nuestro sistema y se verifica solo. Mensualidad más 6 % (Arranca), 5 % (Crece) o 4 % (Escala) sobre delivery y recojo. En mesa, el cobro verificado es opcional: 4,5 % en Crece y 3,5 % en Escala. Si cobras con tu QR o en efectivo, 0 %.</p></div>
-    <div><span class="gi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 17l-5.4 2.8 1.1-6.1L3.2 9.4l6.1-.8z"/></svg></span><b>Qué hacer con el número</b><p>Si lo que nos pagarías es más de lo que hoy se queda la app, no te conviene todavía y te lo diremos. Si es menos, la diferencia es tuya cada mes. Elegimos el plan por costo; si necesitas QR por mesa, mira Crece, y si tienes varias sucursales, Escala.</p></div>
+    <div><span class="gi" aria-hidden="true">{{icon:qr}}</span><b>Cómo calculamos lo que nos pagarías</b><p>Solo la mensualidad: 400 Bs (Arranca), 600 Bs (Crece) o 900 Bs (Escala). La comisión es 0 %, en la mesa, para llevar y a domicilio. Tu cliente paga con el QR de tu banco o en efectivo y la plata va directo a tu cuenta.</p></div>
+    <div><span class="gi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 17l-5.4 2.8 1.1-6.1L3.2 9.4l6.1-.8z"/></svg></span><b>Qué hacer con el número</b><p>Si tu mensualidad es más de lo que hoy se queda la app, no te conviene todavía y te lo diremos. Si es menos, la diferencia es tuya cada mes. Elegimos el plan por costo; si necesitas QR por mesa, mira Crece, y si tienes varias sucursales, Escala.</p></div>
   </div>
 </div></section>
