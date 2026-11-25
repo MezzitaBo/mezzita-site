@@ -8,13 +8,10 @@
             bar:['/assets/demo/bar-hero.webp','/assets/demo/bar-1.webp','/assets/demo/bar-2.webp','/assets/demo/bar-3.webp','/assets/demo/bar-4.webp','/assets/demo/bar-5.webp'],
             franq:['/assets/demo/franq-hero.webp','/assets/demo/franq-1.webp','/assets/demo/franq-2.webp','/assets/demo/franq-3.webp']};
   var MESA = [{n:"Mesa 12 · pago con QR ahora",c:0,mesa:true},{n:"Mesa 12 · pago en efectivo en caja",c:0,mesa:true,cash:true}];
-  /* Oferta v2: comisión solo si el pago pasa por nuestro sistema y se verifica solo; sobre la comida, nunca sobre el envío.
-     del: delivery y recojo. mesa: cobro verificado en mesa (Arranca no lo tiene: la mesa paga con el QR del local, 0 %). */
-  var PLANS = {esencial:{n:"Arranca",del:0.06,mesa:0},salon:{n:"Crece",del:0.05,mesa:0.045},cadena:{n:"Escala",del:0.04,mesa:0.035}};
-  var plan = "esencial";
-  function pct(x){ return (Math.round(x * 1000) / 10).toLocaleString("es-BO") + " %"; }
+  /* Mezzita cobra 0 % de comisión en todos los planes y canales: el cliente paga con el QR del banco del local
+     o en efectivo, y la caja confirma el pago en el panel. */
   var RUBROS = {
-    pizzeria:{flow:{title:"De «¿qué pedimos?» a «ya está en el horno», sin mesero y sin app.",src:[["QR en la mesa","escanea y ve la carta"],["Google Maps","«pizzería cerca» · 21:10"],["Instagram","el video del horno"]],hub:["Tu menú web","pide y paga en el navegador"],wa:["Panel de pedidos","entra a cocina"],out:[["Pago QR","entra cobrado"],["Reseña","al terminar"]],back:"el que ya pidió vuelve directo al chat: sin app, sin comisión de terceros",money:[["Sin comisión de app","Por una app que cobra entre 20 y 30 %, un pedido de 90 Bs te deja entre 63 y 72. En tu menú web, con cobro verificado al 6 %, te deja 84,60. Con tu QR o en efectivo, los 90."],["Mesas que piden solas","Un viernes con 2 meseros atiende 14 mesas sin que nadie espere por la carta."],["Ticket más alto","El menú sugiere bebida y postre en cada pedido. El mesero, cuando se acuerda."]]},
+    pizzeria:{flow:{title:"De «¿qué pedimos?» a «ya está en el horno», sin mesero y sin app.",src:[["QR en la mesa","escanea y ve la carta"],["Google Maps","«pizzería cerca» · 21:10"],["Instagram","el video del horno"]],hub:["Tu menú web","pide y paga en el navegador"],wa:["Panel de pedidos","entra a cocina"],out:[["Pago QR","entra cobrado"],["Reseña","al terminar"]],back:"el que ya pidió vuelve directo al chat: sin app, sin comisión de terceros",money:[["Sin comisión de app","Por una app que cobra entre 20 y 30 %, un pedido de 90 Bs te deja entre 63 y 72. En tu menú web te deja los 90: 0 % de comisión."],["Mesas que piden solas","Un viernes con 2 meseros atiende 14 mesas sin que nadie espere por la carta."],["Ticket más alto","El menú sugiere bebida y postre en cada pedido. El mesero, cuando se acuerda."]]},
       web:{theme:"pizza",url:"pizzerialaesquina.bo",top:"Pedidos: +591 7 000 0000 · Abierto hasta las 23:30 · Delivery propio",nav:["Menú","Promos","Dónde estamos"],eyebrow:"Horno de leña desde 2014",tag:"La mejor pizza de Santa Cruz, en tu mesa o en tu puerta.",sub:"Masa madre, horno de leña y delivery propio sin comisión de apps. Escanea el QR de tu mesa o pide en línea y paga con QR.",cta:"Pedir en línea",ghost:"Ver el menú",ph:PH.pizza,itemsTitle:"Lo más pedido",badge:"4,9 ★ · 212 reseñas en Google",split:["Sobre nosotros","Horno de leña, masa de 48 horas y delivery propio.","Sin comisiones de apps: lo que pagas va a la pizza, no a un intermediario.",["Av. Monseñor Rivero 123, Santa Cruz","Lun a Dom · 18:00 a 23:30"]]},
       verbo:"Pedido",av:"LE",nombre:"Pizzería La Esquina",desc:"Pizzas al horno de leña · Santa Cruz",saludo:"Hola. Este es el menú de hoy. Toca una categoría o agrega directo.",cierre:"Sale en 15 minutos.",
       delivery:MESA.concat([{n:"Recojo en local",c:0},{n:"Delivery Centro",c:5},{n:"Delivery fuera del centro",c:10}]),
@@ -106,28 +103,28 @@
   function syncCanal(){ var sel = $('d-deliv'); if(sel) sel.selectedIndex = ord.canal; var b = $('d-pay'); if(b) b.textContent = ord.deliv().cash ? 'Enviar a cocina' : 'Cobrar con QR'; }
   function ownerPending(st){
     var live = $('o-live'), empty = live.querySelector('.o-empty'); if(empty) empty.remove();
-    if(!st.lines.length){ if(pendingRow && pendingRow.parentNode) pendingRow.remove(); pendingRow = null; if(!live.children.length) live.innerHTML = '<p class="o-empty">Cuando tu cliente pague, el pedido aparece aquí con su mesa o su dirección. Sin preguntar, sin revisar comprobantes.</p>'; return; }
+    if(!st.lines.length){ if(pendingRow && pendingRow.parentNode) pendingRow.remove(); pendingRow = null; if(!live.children.length) live.innerHTML = '<p class="o-empty">Cuando tu cliente pida, el pedido aparece aquí con su mesa o su dirección, y tu caja confirma el pago.</p>'; return; }
     if(!pendingRow || !pendingRow.parentNode){ pendingRow = document.createElement('div'); pendingRow.className = 'o-row pending'; live.insertBefore(pendingRow, live.firstChild); }
     pendingRow.innerHTML = '<span class="o-dot"></span><div><b>' + esc(R.verbo) + ' en curso · ' + esc(st.deliv.mesa ? 'Mesa 12' : st.deliv.n) + '</b><small>' + st.lines.map(function(l){ return l.q + ' × ' + esc(l.n); }).join(', ') + ' · <em class="why">el cliente está eligiendo</em></small></div><span class="o-amt num">' + fmt(st.total) + '</span>';
   }
   function ownerPaid(o){
     var cash = o.cash, d = o.deliv;
-    var food = o.total, P = PLANS[plan], why;
+    var food = o.total, why;
     caja.n++; caja.total += o.total;
     if(cash){ caja.cash += food; why = 'cobra caja en efectivo o con tu QR · 0 % de comisión'; }
-    else if(d.mesa){ caja.mesa += food; why = P.mesa ? 'cobro verificado en mesa · ' + pct(P.mesa) + ' de comisión, ' + fmt(Math.round(food * P.mesa)) : 'pagado con el QR de tu local · 0 % de comisión'; }
-    else { caja.del += food; why = 'cobro verificado al pedir · ' + pct(P.del) + ' sobre la comida, ' + fmt(Math.round(food * P.del)) + (d.c ? ' · el envío no paga comisión' : ''); }
+    else if(d.mesa){ caja.mesa += food; why = 'pagó con el QR de tu banco, caja confirmó · 0 % de comisión'; }
+    else { caja.del += food; why = 'pagó con el QR de tu banco, caja confirmó · 0 % de comisión' + (d.c ? ' · el envío es de tu repartidor' : ''); }
     var live = $('o-live'); if(pendingRow && pendingRow.parentNode) pendingRow.remove(); pendingRow = null;
     var row = document.createElement('div'); row.className = 'o-row new';
     row.innerHTML = '<span class="o-dot ' + (cash ? 'cash' : 'ok') + '"></span><div><b>' + esc(R.verbo) + ' #' + o.id + ' · ' + esc(d.mesa ? 'Mesa 12' : d.n) + (o.wa ? ' · aviso por WhatsApp' : '') + '</b><small>' + o.lines.map(function(l){ return l.q + ' × ' + esc(l.n); }).join(', ') + ' · <em>' + why + '</em></small></div><span class="o-amt num ' + (cash ? 'cash-amt' : 'paid-amt') + '">' + fmt(o.total) + '</span>';
     live.insertBefore(row, live.firstChild);
-    $('o-n').textContent = caja.n; $('o-total').textContent = fmt(caja.total); $('o-zero').textContent = '0'; updateCommission(); updateSend();
+    $('o-n').textContent = caja.n; $('o-total').textContent = fmt(caja.total); $('o-zero').textContent = '0 %'; updateCommission(); updateSend();
   }
   function load(k){
     key = k; R = RUBROS[k];
     document.querySelectorAll('[data-rubro]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-rubro') === k ? 'true' : 'false'); });
     $('o-biz').textContent = R.nombre; $('o-desc').textContent = R.desc;
-    caja = {n: 0, total: 0, del: 0, mesa: 0, cash: 0}; $('o-n').textContent = '0'; $('o-total').textContent = '0 Bs'; pendingRow = null; $('o-live').innerHTML = '<p class="o-empty">Cuando tu cliente pague, el pedido aparece aquí con su mesa o su dirección. Sin preguntar, sin revisar comprobantes.</p>'; updateCommission();
+    caja = {n: 0, total: 0, del: 0, mesa: 0, cash: 0}; $('o-n').textContent = '0'; $('o-total').textContent = '0 Bs'; pendingRow = null; $('o-live').innerHTML = '<p class="o-empty">Cuando tu cliente pida, el pedido aparece aquí con su mesa o su dirección, y tu caja confirma el pago.</p>'; updateCommission();
     $('d-deliv').innerHTML = R.delivery.map(function(d){ return '<option>' + esc(d.n) + (d.c ? ' (+' + d.c + ' Bs)' : '') + '</option>'; }).join('');
     try{ var u = new URL(location.href); u.searchParams.set('rubro', k); history.replaceState(null, '', u); }catch(e){}
     renderWeb(); renderFlow();
@@ -141,12 +138,10 @@
   function updateSend(){ var a = $('d-send'); if(!a) return; a.href = window.OP ? window.OP.waHref(message()) : 'https://wa.me/59162506518?text=' + encodeURIComponent(message()); }
   function updateCommission(){
     var box = $('o-com'); if(!box) return;
-    var appPct = Math.max(0, Math.min(60, +$('o-pct').value || 0)), P = PLANS[plan];
+    var appPct = Math.max(0, Math.min(60, +$('o-pct').value || 0));
     $('o-saved').textContent = fmt(Math.round(caja.del * appPct / 100));
-    $('o-del-pct').textContent = pct(P.del) + ' sobre la comida, con cobro verificado';
-    $('o-mesa-pct').textContent = P.mesa ? pct(P.mesa) + ' con cobro verificado (opcional)' : '0 %, pagan con el QR de tu local';
-    $('o-ours').textContent = fmt(Math.round(caja.del * P.del)); $('o-mesa').textContent = fmt(Math.round(caja.mesa * P.mesa));
-    $('o-cash').textContent = fmt(caja.cash + (P.mesa ? 0 : caja.mesa));
+    $('o-ours').textContent = fmt(caja.del); $('o-mesa').textContent = fmt(caja.mesa);
+    $('o-cash').textContent = fmt(caja.cash);
   }
   function toast(msg){ var n = document.createElement('div'); n.className = 'toast'; n.textContent = msg; document.body.appendChild(n); setTimeout(function(){ n.remove(); }, 2200); }
 
@@ -158,7 +153,6 @@
     else if(t.id === 'd-reset') load(key);
   });
   if($('o-pct')) $('o-pct').addEventListener('input', updateCommission);
-  if($('d-plan')) $('d-plan').addEventListener('change', function(){ plan = PLANS[$('d-plan').value] ? $('d-plan').value : 'esencial'; updateCommission(); });
   $('d-deliv').addEventListener('change', function(){ ord.canal = $('d-deliv').selectedIndex; ord.render(); ownerPending(ord.state()); syncCanal(); updateSend(); });
   $('d-send').addEventListener('click', function(e){ if(!ord.lines().length){ e.preventDefault(); toast('Agrega algo del menú primero.'); } });
   load(key);

@@ -94,12 +94,12 @@
         (d.c ? '<div class="ws-tot"><span>Envío · lo pagas al repartidor</span><b>' + fmt(d.c) + '</b></div>' : '') +
         '<div class="ws-tot big"><span>Total</span><b>' + fmt(this.total()) + '</b></div>' +
         '<button type="button" class="ws-pay" data-a="pay">' + (cash ? 'Enviar a cocina · pago en caja' : 'Pagar ' + fmt(this.total()) + ' con QR') + '</button>' +
-        (mesa ? '<small class="ws-fine">' + (cash ? 'Pagas al final con el mesero, en efectivo o con QR del local.' : 'QR bancario. Entra pagado a cocina. Sin capturas.') + '</small>' : '<small class="ws-fine">Pago con QR bancario de cualquier banco. Confirmación inmediata.</small>') + '</div>';
+        (mesa ? '<small class="ws-fine">' + (cash ? 'Pagas al final con el mesero, en efectivo o con QR del local.' : 'Pagas con el QR del local. Tocas «Ya pagué» y caja confirma.') + '</small>' : '<small class="ws-fine">Pagas con el QR del local, desde cualquier banco. Caja confirma tu pago.</small>') + '</div>';
     } else if(this.view === 'pay'){
-      body += '<div class="ws-cart ws-center"><h4>Escanea para pagar</h4><b class="ws-amt">' + fmt(this.total()) + '</b>' + qrHTML(this.total()) + '<small class="ws-fine">Abre tu app del banco y escanea. Vence en 10 min.</small><div class="ws-wait"><i></i><i></i><i></i></div></div>';
+      body += '<div class="ws-cart ws-center"><h4>Escanea para pagar</h4><b class="ws-amt">' + fmt(this.total()) + '</b>' + qrHTML(this.total()) + '<small class="ws-fine">Abre tu app del banco y escanea. Luego toca «Ya pagué» y caja lo confirma.</small><div class="ws-wait"><i></i><i></i><i></i></div></div>';
     } else {
       var trackable = !mesa;
-      body += '<div class="ws-cart ws-center ws-done"><span class="ws-ok">✓</span><h4>' + (cash ? 'Pedido en cocina' : 'Pago confirmado') + '</h4><p>Pedido <b>' + this.id + '</b> · ' + (mesa ? 'Mesa 12' : esc(d.n)) + '</p><p class="ws-eta">' + esc(R.cierre) + '</p>' +
+      body += '<div class="ws-cart ws-center ws-done"><span class="ws-ok">✓</span><h4>' + (cash ? 'Pedido en cocina' : 'Caja confirmó tu pago') + '</h4><p>Pedido <b>' + this.id + '</b> · ' + (mesa ? 'Mesa 12' : esc(d.n)) + '</p><p class="ws-eta">' + esc(R.cierre) + '</p>' +
         (cash ? '<small class="ws-fine">Pagas al final con el mesero.</small>' : '<span class="paid">✓ PAGADO · ' + fmt(this.total()) + '</span>') +
         (trackable ? '<label class="ws-opt"><input type="checkbox" data-wa-opt' + (this.wa ? ' checked' : '') + '><span><b>Avisarme por WhatsApp</b> cuando esté listo o salga el repartidor</span></label>' : '') +
         '<label class="ws-opt"><input type="checkbox"><span>Acepto recibir promociones de ' + esc(R.nombre) + '</span></label>' +
