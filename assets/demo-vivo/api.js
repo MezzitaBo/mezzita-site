@@ -137,8 +137,8 @@
     foodtruck: { label: 'Food truck', venue: 'Rueda Burger', bar: false, extra: ['inventory'], order: 'Quiero 2 combos clásicos' },
     heladeria: { label: 'Heladería', venue: 'Heladería Copo', bar: false, extra: ['tables', 'inventory'], order: 'Quiero un pote de medio litro, chocolate y frutilla' },
     bar: { label: 'Bar o pub', venue: 'Bar El Farol', bar: true, extra: ['tables', 'reservations', 'inventory', 'events', 'door'], order: 'Quiero reservar una mesa y una jarra para 4' },
-    discoteca: { label: 'Discoteca o boliche', venue: 'Club Órbita', bar: true, extra: ['tables', 'inventory', 'events', 'door', 'wristbands'], order: 'Quiero 2 entradas para hoy' },
-    eventos: { label: 'Eventos y productoras', venue: 'Altura Eventos', bar: true, extra: ['inventory', 'events', 'door', 'wristbands'], order: 'Quiero 2 entradas generales para el festival' },
+    discoteca: { label: 'Discoteca o boliche', venue: 'Club Órbita', bar: true, extra: ['tables', 'inventory', 'events', 'door', 'wristbands'], order: 'Quiero 2 entradas para hoy', entries: true },
+    eventos: { label: 'Eventos y productoras', venue: 'Altura Eventos', bar: true, extra: ['inventory', 'events', 'door', 'wristbands'], order: 'Quiero 2 entradas generales para el festival', entries: true },
   };
   var STAFF = { owner: 'Lucía Rojas', admin: 'Marco Vargas', cashier: 'Ana Quispe', waiter: 'Diego Mamani', kitchen: 'Rosa Choque', bar: 'Javier Flores', door: 'Pablo Gutiérrez' };
 
@@ -157,8 +157,16 @@
   }
 
   function mockScripts(t) {
+    var order = t.entries ? [
+      { guest: t.order },
+      { assistant: 'Hola, te saluda el asistente de ' + t.venue + '. Tenemos general y VIP. ¿Cuáles quieres y a nombre de quién?' },
+      { guest: 'Dos generales, a nombre de Carla' },
+      { assistant: 'Listo: 2 entradas generales a nombre de Carla. Total Bs 160. ¿Confirmo?' },
+      { guest: 'Sí, confirmo' },
+      { assistant: 'Confirmado. Te llegan por aquí con su código para mostrar en la puerta.' },
+    ] : null;
     return {
-      wa_order: [
+      wa_order: order || [
         { guest: t.order },
         { assistant: 'Hola, te saluda el asistente de ' + t.venue + '. Claro que sí. ¿Lo pasas a recoger o te lo llevamos?' },
         { guest: 'Lo paso a recoger en 30 minutos' },
@@ -309,7 +317,8 @@
       }
       var next = nextGuest(steps, i);
       if (script === 'wa_order' && next === null && m) {
-        order(b, { label: 'WhatsApp · ' + steps[0].guest.replace(/^Quiero /, ''), where: 'Para recoger', total: 9600, status: 'pending', src: 'whatsapp', phone: true });
+        var entries = TEMPLATES[b.sb.template] && TEMPLATES[b.sb.template].entries;
+        order(b, { label: 'WhatsApp · ' + steps[0].guest.replace(/^Quiero /, ''), where: entries ? 'Entradas' : 'Para recoger', total: entries ? 16000 : 9600, status: 'pending', src: 'whatsapp', phone: true });
       }
       return later({ ok: true, messages: out, next: next, done: next === null });
     }
@@ -415,7 +424,7 @@
     var last = '';
     function draw() {
       var v = api && sb && api.peek(sb);
-      if (!v) { m.innerHTML = '<p class="empty">Esta demo se cerró.</p>'; return; }
+      if (!v) { m.innerHTML = '<p class="empty">Tu demo se cerró.</p>'; return; }
       var s = v.state, k = cfg.kind, h = '';
       var kpis = '<div class="kpis"><div><b>' + bs(s.paid_today_cents) + '</b><span>vendido hoy</span></div><div><b>' + s.pending +
         '</b><span>por confirmar</span></div><div><b>' + s.in_kitchen + '</b><span>en cocina</span></div><div><b>' + s.open_tables + '</b><span>mesas abiertas</span></div></div>';

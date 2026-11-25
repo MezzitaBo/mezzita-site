@@ -48,8 +48,11 @@
     this.opts = opts || {};
     this.scripts = this.opts.scripts || {};
     this.flows = {};
+    var saved = this.opts.flows || {}; // a resumed demo keeps where each script was
     ORDER.forEach(function (n) {
-      if (self.scripts[n]) self.flows[n] = { next: nextGuest(self.scripts[n], 0) };
+      if (!self.scripts[n]) return;
+      var s = saved[n];
+      self.flows[n] = { next: s && (s.next === null || typeof s.next === 'number') ? s.next : nextGuest(self.scripts[n], 0) };
     });
     this.active = null;
     this.busy = false;
@@ -129,9 +132,10 @@
     }
   };
 
-  /** Adds server messages (from demo-play or demo-pulse), once each, venue replies one by one. */
-  Phone.prototype.add = function (messages) {
+  /** Adds server messages (from demo-play or demo-pulse), once each, venue replies one by one ({instant} at once). */
+  Phone.prototype.add = function (messages, o) {
     var self = this;
+    var instant = Boolean(o && o.instant);
     (messages || []).forEach(function (m) {
       if (!m || !m.text) return;
       var id = m.id || m.from + ':' + m.text + ':' + m.at;
@@ -143,6 +147,10 @@
         })[0];
         if (local) { local.removeAttribute('data-local'); return; }
         self.out++;
+        self.bubble(m);
+        self.changed();
+      } else if (instant) {
+        self.in++;
         self.bubble(m);
         self.changed();
       } else {

@@ -104,6 +104,10 @@
   function planLabel(p) {
     return 'Plan ' + p.name + (p.price_cents != null ? ' · ' + bs(p.price_cents) + ' al mes' : '');
   }
+  /** The same, with the separator spaced for the eye (the narrow font closes it up). */
+  function planHtml(p) {
+    return esc(planLabel(p)).replace(' · ', ' <span class="mzd-sep" aria-hidden="true">·</span> ');
+  }
 
   /**
    * The left menu from demo-start: modules {key: {on, plan}} decide each item. Absent = the template does not use
@@ -227,7 +231,8 @@
   function load() {
     try {
       var v = JSON.parse(root.sessionStorage.getItem(STORE) || 'null');
-      return v && v.sb && v.params && Date.parse(v.sb.expires_at) > Date.now() ? v : null;
+      var live = v && v.sb && v.params && Date.parse(v.sb.expires_at) > Date.now();
+      return live && v.backend === api.pickBackend(root.location.search) ? v : null;
     } catch (e) { return null; }
   }
 
@@ -273,6 +278,7 @@
     var h = host();
     h.hidden = false;
     D.documentElement.classList.add('mz-demo-open');
+    D.documentElement.classList.toggle('mz-demo-phone', !isWide());
     if (vivo()) D.documentElement.classList.add('mz-vivo');
     h.innerHTML = '<div class="mzd" data-state="building" data-layout="' + (isWide() ? 'wide' : 'phone') + '">' +
       '<div class="mzd-building" role="status"><span class="mzd-spin" aria-hidden="true"></span><p>' + BUILDING + '</p>' +
@@ -290,6 +296,7 @@
         s.ambientNext = opts.saved.ambientNext || 0;
         if (opts.saved.guest) s.guest = opts.saved.guest;
         if (opts.saved.team) s.team = opts.saved.team;
+        s.flows = opts.saved.flows || null;
       }
       checkPrice(sb, params);
       mount();
@@ -316,7 +323,7 @@
     store(null);
     var h = D.getElementById('demo-vivo');
     if (h) { h.innerHTML = ''; h.hidden = true; }
-    D.documentElement.classList.remove('mz-demo-open', 'mz-vivo');
+    D.documentElement.classList.remove('mz-demo-open', 'mz-vivo', 'mz-demo-phone');
     emit('close');
   }
 
@@ -338,8 +345,9 @@
   function save() {
     if (!S || !S.sb) return;
     store({
-      params: S.params, sb: S.sb, cursor: S.cursor, welcomeSeen: S.welcomeSeen,
+      backend: S.backend, params: S.params, sb: S.sb, welcomeSeen: S.welcomeSeen,
       ambientNext: S.ambient ? S.ambient.next : S.ambientNext, guest: S.guest, team: S.team,
+      flows: S.phone ? S.phone.flows : null,
     });
   }
 
@@ -377,13 +385,16 @@
       '<header class="mzd-top">' +
         '<div class="mzd-id"><span class="mzd-dot" aria-hidden="true"></span><span class="mzd-note">Demo · datos de ejemplo</span>' +
           '<b class="mzd-venue" title="' + esc(venue) + '">' + esc(venue) + '</b></div>' +
-        '<div class="mzd-plan"><span class="mzd-planchip">' + esc(planLabel(p)) + '</span>' +
+        '<div class="mzd-plan"><span class="mzd-planchip">' + planHtml(p) + '</span>' +
           '<button type="button" class="mzd-link" data-act="plans">Cambiar</button></div>' +
+        '<button type="button" class="mzd-planbtn" data-act="plans" aria-label="' + esc(planLabel(p)) + '. Cambiar de plan">Plan ' + esc(p.name) +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>' +
         '<div class="mzd-acts"><button type="button" class="mzd-ghost" data-act="guide">Guía</button>' +
           '<button type="button" class="mzd-ghost" data-act="restart">Reiniciar</button>' +
           '<a class="btn btn-primary mzd-want" href="' + esc(want) + '" target="_blank" rel="noopener">Quiero esto en mi negocio</a></div>' +
       '</header>' +
-      '<div class="mzd-seg" role="group" aria-label="Qué lado ver"><button type="button" data-side="guest">Cliente</button><button type="button" data-side="team">Equipo</button></div>' +
+      '<div class="mzd-seg" role="group" aria-label="Qué lado ver"><button type="button" data-side="guest"><b>Cliente</b><small data-cur="guest"></small></button>' +
+        '<button type="button" data-side="team"><b>Equipo</b><small data-cur="team"></small></button></div>' +
       '<div class="mzd-body">' +
         '<nav class="mzd-menu" aria-label="Qué ver en la demo">' + menuHtml(S.menu, false) + '</nav>' +
         '<div class="mzd-stage">' +
@@ -404,10 +415,11 @@
           '<button type="button" class="btn btn-primary" data-act="tour-next">Siguiente</button></div></div></div>' +
         '<div class="mzd-toast" role="status" aria-live="polite" hidden></div>' +
       '</div>' +
-      '<div class="mzd-mbar"><button type="button" class="mzd-mbtn" data-act="sheet" aria-haspopup="dialog">' + icon('grid') + '<span>Demo</span><small class="mzd-mcur"></small></button></div>' +
+      '<div class="mzd-mbar"><button type="button" class="mzd-mbtn" data-act="sheet" aria-haspopup="dialog">' + icon('grid') + '<span>Demo</span></button>' +
+        '<a class="btn btn-primary mzd-mwant" href="' + esc(want) + '" target="_blank" rel="noopener">Quiero esto en mi negocio</a></div>' +
       '<div class="mzd-sheet" hidden role="dialog" aria-modal="true" aria-label="Demo">' +
         '<div class="mzd-sheet-card">' +
-          '<div class="mzd-sheet-hd"><div><b>' + esc(venue) + '</b><small>' + esc(planLabel(p)) + ' · <button type="button" class="mzd-link" data-act="plans">Cambiar</button></small></div>' +
+          '<div class="mzd-sheet-hd"><div><b>' + esc(venue) + '</b><small>' + planHtml(p) + ' <button type="button" class="mzd-link" data-act="plans">Cambiar</button></small></div>' +
             '<button type="button" class="mzd-x" data-act="sheet-close" aria-label="Cerrar">' + icon('close') + '</button></div>' +
           '<div class="mzd-sheet-acts"><button type="button" class="mzd-ghost" data-act="guide">Guía</button><button type="button" class="mzd-ghost" data-act="restart">Reiniciar</button>' +
             '<a class="btn btn-primary" href="' + esc(want) + '" target="_blank" rel="noopener">Quiero esto en mi negocio</a></div>' +
@@ -431,10 +443,14 @@
     S.root.setAttribute('data-full', '');
     layout();
 
+    // A reservation script makes no sense on a plan without reservations: its chip is left out.
+    var scripts = Object.assign({}, (sb.wa && sb.wa.scripts) || {});
+    if (!(sb.modules && sb.modules.reservations && sb.modules.reservations.on)) delete scripts.wa_reservation;
     S.phone = new phoneMod.Phone($('.mzd-wa'), {
       venue: sb.org && sb.org.name,
-      scripts: (sb.wa && sb.wa.scripts) || {},
+      scripts: scripts,
       freeText: Boolean(sb.wa && sb.wa.free_text),
+      flows: S.flows,
       send: function (script, step) { return S.client.play(S.sb, script, step); },
       text: function (t) { return S.client.play(S.sb, 'free', { text: t }); },
       onChange: function () { observe(null); },
@@ -484,6 +500,19 @@
       else { s.ambient && s.ambient.release(); pulse(); }
     });
     on(root, 'resize', layout);
+    // The menu opens on hover and on keyboard focus, and folds as soon as an item is chosen (it covers the guest's
+    // phone while open). A plain :focus-within would keep it open after every click.
+    var menu = $('.mzd-menu');
+    var kb = false;
+    on(D, 'keydown', function (e) { if (e.key === 'Tab') kb = true; }, true);
+    on(D, 'pointerdown', function () { kb = false; }, true);
+    on(menu, 'mouseenter', function () { if (!menu.hasAttribute('data-folded')) menu.classList.add('is-open'); });
+    on(menu, 'mouseleave', function () {
+      menu.removeAttribute('data-folded');
+      if (!(kb && menu.contains(D.activeElement))) menu.classList.remove('is-open');
+    });
+    on(menu, 'focusin', function () { if (kb) menu.classList.add('is-open'); });
+    on(menu, 'focusout', function (e) { if (!menu.contains(e.relatedTarget)) menu.classList.remove('is-open'); });
     if (typeof ResizeObserver === 'function') {
       s.ro = new ResizeObserver(function () { scale(); });
       s.ro.observe($('.mzd-stage'));
@@ -494,6 +523,8 @@
     var t = e.target.closest('[data-item],[data-act],[data-side],[data-sub],[data-tour],[data-plan]');
     if (!t || !S.root.contains(t)) return;
     if (t.hasAttribute('data-item')) {
+      var m = t.closest('.mzd-menu');
+      if (m) { m.classList.remove('is-open'); m.setAttribute('data-folded', ''); }
       choose(t.getAttribute('data-item'));
       if (t.closest('.mzd-sheet')) sheet(false);
       return;
@@ -649,9 +680,12 @@
       var on = b.getAttribute('data-kind') === 'guest' ? k === S.guest : shown.indexOf(k) >= 0;
       b.setAttribute('aria-current', on ? 'true' : 'false');
     });
-    var cur = S.mside === 'team' ? findItem(S.menu, shown[0]) : findItem(S.menu, S.guest);
-    var mc = $('.mzd-mcur');
-    if (mc) mc.textContent = cur ? cur.label : '';
+    // the phone's «Cliente | Equipo» switch says what each side is showing
+    var g = findItem(S.menu, S.guest);
+    var cg = $('[data-cur="guest"]');
+    var ct = $('[data-cur="team"]');
+    if (cg) cg.textContent = g ? g.label : '';
+    if (ct) ct.textContent = shown.map(function (r) { var it = findItem(S.menu, r); return it ? it.label : r; }).join(' y ');
   }
 
   // ---------------------------------------------------------------------------------------------- layout --
@@ -718,8 +752,7 @@
     m.toggleAttribute('data-sticky', Boolean(opts.sticky));
     if (opts.sticky) m.setAttribute('data-sticky', '1');
     m.hidden = false;
-    var f = card.querySelector('[data-tour], [data-plan], .btn') || card.querySelector('button');
-    (f || card).focus();
+    card.focus(); // the dialog itself: announced, and no focus ring on a button the visitor did not pick
   }
 
   function welcome() {
@@ -816,9 +849,10 @@
     s.client.pulse(s.sb, s.cursor).then(function (r) {
       if (s !== S) return;
       s.pulsing = false;
+      var first = s.cursor == null; // a resumed demo gets its whole conversation back: shown at once
       if (r.cursor != null) s.cursor = r.cursor;
       if (r.expires_at) s.sb.expires_at = r.expires_at;
-      if (r.messages && r.messages.length) s.phone.add(r.messages);
+      if (r.messages && r.messages.length) s.phone.add(r.messages, { instant: first });
       observe(r.state || null);
       save();
       schedulePulse();
