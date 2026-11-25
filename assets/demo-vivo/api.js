@@ -14,14 +14,17 @@
   // Build constant. Switch to 'demo' once the mezzita-demo project exists (owner decision 1), or to 'staging' for
   // the interim launch, when demo-start/pulse/play are deployed there.
   var DEFAULT_BACKEND = 'mock';
+  // site: the demo venue websites (demo-sites-design.md §6, sitios.mezzita.com); '' = not deployed for that backend
+  // yet, and the guest layers fall back to the app's own guest pages (/m/, /mesa/, /e/). demo-start's links.site wins.
   var BACKENDS = {
-    mock: { functions: '', app: '' },
+    mock: { functions: '', app: '', site: '' },
     staging: {
       functions: 'https://pnkfxemhzswcbfygvfzf.supabase.co/functions/v1',
       app: 'https://mezzita-app-staging.rbrunocardona.workers.dev',
+      site: '',
     },
     // Functions URL is set when the owner creates the mezzita-demo project; until then ?backend=demo is refused.
-    demo: { functions: '', app: 'https://demo.mezzita.com' },
+    demo: { functions: '', app: 'https://demo.mezzita.com', site: 'https://sitios.mezzita.com' },
   };
 
   // What the visitor reads for each error code of L2 and L3 (demo-l2.md, demo-l3.md).
@@ -122,6 +125,7 @@
       },
       seatUrl: function (sb, role) { return app(sb) + '/demo/entrar' + seatHash(sb, role); },
       guestUrl: function (sb, path) { return /^https?:/.test(path) ? path : app(sb) + path; },
+      siteOrigin: function (sb) { return (sb && sb.links && sb.links.site) || cfg.site || ''; },
     };
   }
 
@@ -228,7 +232,7 @@
         a(2.5, 'Gracias por escribir. Lo pasamos al equipo.');
         s(20, 'not_relevant');
       }
-      return { conv: conv, kind: kind, guest_name: GUESTS[i], start_s: STARTS[i], beats: b };
+      return { conv: conv, kind: kind, guest_name: GUESTS[i], start_s: STARTS[i], no_module: kind === 'reservation' && !reservations, beats: b };
     });
   }
 
@@ -310,10 +314,16 @@
         wa_timeline: live.map(function (c) {
           return {
             conv: c.conv, kind: c.kind, guest_name: c.guest_name, start_s: c.start_s,
-            beats: c.beats.map(function (x) { var o = { after_s: x.after_s, type: x.type }; if (x.hold_s) o.hold_s = x.hold_s; return o; }),
+            no_module: Boolean(c.no_module),
+            beats: c.beats.map(function (x) {
+              var o = { after_s: x.after_s, type: x.type };
+              if (x.hold_s) o.hold_s = x.hold_s;
+              if (x.action) o.action = x.action;
+              return o;
+            }),
           };
         }),
-        wa: { ambient: [{ kind: 'order', after_s: 20 }, { kind: 'reservation', after_s: 90 }, { kind: 'waiter_call', after_s: 160 }] },
+        ambient_timeline: [{ event: 0, kind: 'order', after_s: 20 }, { event: 1, kind: 'reservation', after_s: 90 }, { event: 2, kind: 'waiter_call', after_s: 160 }],
       };
       boxes[id] = {
         key: key, sb: sb, live: live, expires_at: sb.expires_at, expired: false, msgs: {}, chats: {}, done: {}, stopped: [],
@@ -335,8 +345,7 @@
       var chats = Object.keys(b.chats).map(function (k) { return Object.assign({}, b.chats[k]); });
       return later({
         expires_at: b.expires_at, state: state(b),
-        wa: { done: Object.assign({}, b.done), stopped: b.stopped.slice(), chats: chats, messages: list.slice(from) },
-        cursor: String(list.length),
+        wa: { done: Object.assign({}, b.done), stopped: b.stopped.slice(), chats: chats, conv: conv, messages: list.slice(from), cursor: String(list.length) },
       });
     }
 
@@ -357,7 +366,7 @@
           stage(b, conv, 'pedido');
           did.push({ actor: 'assistant', action: 'order', ticket_number: 120 + conv });
         } else if (x.did === 'reservation') did.push({ actor: 'assistant', action: 'reservation' });
-        else if (x.did === 'handoff') { did.push({ actor: 'assistant', action: 'handoff' }); }
+        else if (x.did === 'handoff') { stage(b, conv, 'conversando'); did.push({ actor: 'assistant', action: 'handoff' }); }
       } else {
         var skipped = false;
         if (x.action === 'approve') { if (o.approved) skipped = true; else o.approved = true; }
@@ -384,7 +393,7 @@
       if (b instanceof Error) return later(b);
       body = body || {};
       if (body.script === 'ambient') {
-        var ev = b.sb.wa.ambient[body.event];
+        var ev = b.sb.ambient_timeline.filter(function (x) { return x.event === body.event; })[0];
         if (!ev) return later(DemoError('beat_unknown', 404));
         if (!b.ambient[body.event]) {
           b.ambient[body.event] = true;
@@ -482,6 +491,7 @@
       appOrigin: function () { return ''; },
       seatUrl: function () { return ''; },
       guestUrl: function () { return ''; },
+      siteOrigin: function () { return ''; },
       page: mockPage,
     };
   }
@@ -499,7 +509,7 @@
     bar: ['Barra', 'Solo los pedidos que le toca preparar.'],
     door: ['Puerta', 'Vende y valida entradas y manillas.'],
     site: ['Página web', 'La página de tu negocio.'],
-    menu: ['Menú web', 'Tu carta en línea: pide para recoger o delivery.'],
+    menu: ['Menú y pedido', 'La carta del local con su carrito: pide para recoger o delivery.'],
     reserve: ['Reservar', 'Tu cliente elige día, hora y personas.'],
     table: ['Mesa 4', 'Escaneaste el QR de la mesa.'],
     tickets: ['Entradas', 'Compra tu entrada para esta noche.'],

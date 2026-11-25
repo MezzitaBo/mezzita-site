@@ -105,7 +105,18 @@ html.mz-vivo .mzd,.mzd[data-layout="phone"]{top:0;z-index:70}
 .mzd-device{position:relative;flex:none;width:calc(410px * var(--k));height:calc(820px * var(--k))}
 .mzd-screen{position:absolute;left:0;top:0;width:410px;height:820px;overflow:hidden;transform:scale(var(--k));transform-origin:0 0;border:10px solid #0B0C10;border-radius:46px;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 40px 70px -36px rgba(21,23,28,.6)}
 .mzd-gframes,.mzd-wa,.mzd-gframe{position:absolute;inset:0}
-.mzd-gframe{width:100%;height:100%;border:0;background:#fff}
+.mzd-gframe{display:flex;flex-direction:column;background:#fff}
+.mzd-gframe iframe{flex:1;width:100%;min-height:0;border:0;background:#fff}
+/* a browser bar over every guest page, with a believable address («casabrasa.bo/carta»), never the real host */
+.mzd-urlbar{flex:none;display:flex;align-items:center;gap:6px;padding:34px 14px 8px;background:#F3F2EE;border-bottom:1px solid rgba(21,23,28,.08)}
+.mzd-urlbar i{display:none;flex:none;width:10px;height:10px;border-radius:50%;background:#DEDCD5}
+.mzd-urlbar span{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:10px;background:#fff;box-shadow:inset 0 0 0 1px rgba(21,23,28,.08);font:500 13.5px/1 var(--f-body);color:#3B4048}
+.mzd-urlbar b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mzd-urlbar svg{flex:none;width:12px;height:12px;color:#7A7F86}
+.mzd[data-full="guest"] .mzd-urlbar{padding:9px 14px}
+.mzd[data-full="guest"] .mzd-urlbar i{display:block}
+.mzd[data-full="guest"] .mzd-urlbar span{flex:0 1 460px;margin:0 auto;justify-content:flex-start}
+.mzd-guest[data-kind="wa"] .mzd-full{display:none}
 .mzd-guest[data-kind="wa"] .mzd-gframes{visibility:hidden;pointer-events:none} /* mounted guest pages stay loaded under the phone */
 
 .mzd-seats{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:14px}
@@ -218,6 +229,7 @@ html.mz-vivo .mzd,.mzd[data-layout="phone"]{top:0;z-index:70}
 .mzd[data-layout="phone"] .mzd-seats{gap:0}
 .mzd[data-layout="phone"] .mzd-seat>iframe{border:0;border-radius:0;box-shadow:none}
 .mzd[data-layout="phone"] .mzp-hd{padding-top:10px}
+.mzd[data-layout="phone"] .mzd-urlbar{padding-top:8px}
 .mzd[data-layout="phone"] .mzp-pick select{height:44px}
 .mzd[data-layout="phone"] .mzd-rail{position:relative;flex:none;left:auto;right:auto;bottom:auto;border-radius:0;border:0;border-top:1px solid rgba(255,255,255,.1)}
 .mzd[data-layout="phone"] .mzd-rail-in{flex-direction:column;align-items:stretch;gap:10px;padding:12px}

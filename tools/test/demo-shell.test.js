@@ -117,17 +117,26 @@ test("open params are normalised: unknown plan → crece, venues 1..3, name lett
   assert.equal(shell.normalize({ name: null }).name, "", "the wizard sends null when there is no name");
 });
 
-test("venue site URL (L7): org, venue, template, the event's slug and the backend", async () => {
+test("guest layers frame the venue site (design §6): hero, #carta, mesa, reservar, evento; app pages as fallback", async () => {
   const sb = await build("discoteca", "nightlife");
-  const u = new URL(shell.sitePath(sb, "staging"), "https://mezzita.com");
-  assert.equal(u.pathname, "/demo/sitio/");
-  assert.equal(u.searchParams.get("org"), sb.org.slug);
-  assert.equal(u.searchParams.get("venue"), "centro");
-  assert.equal(u.searchParams.get("tpl"), "discoteca");
-  assert.equal(u.searchParams.get("evento"), "esta-noche");
-  assert.equal(u.searchParams.get("backend"), "staging");
-  const cafe = new URL(shell.sitePath(await build("cafe", "arranca"), "mock"), "https://mezzita.com");
-  assert.equal(cafe.searchParams.has("evento"), false, "no event: no evento");
+  const origin = "https://sitios.mezzita.com";
+  const u = (k) => new URL(shell.siteUrl(sb, origin, k));
+  assert.equal(u("site").origin, origin);
+  assert.equal(u("site").searchParams.get("tpl"), "discoteca");
+  assert.equal(u("site").searchParams.get("org"), sb.org.slug);
+  assert.equal(u("site").searchParams.get("venue"), "centro");
+  assert.equal(u("site").hash, "");
+  assert.equal(u("menu").hash, "#carta");
+  assert.equal(u("table").searchParams.get("mesa"), sb.links.table.split("/").pop());
+  assert.equal(u("reserve").searchParams.get("reservar"), "1");
+  assert.equal(u("tickets").searchParams.get("evento"), "esta-noche");
+  assert.equal(shell.siteUrl(sb, "", "menu"), "", "no site for this backend yet: fallback to the app's pages");
+  const cafe = await build("cafe", "arranca");
+  assert.equal(shell.siteUrl(cafe, origin, "tickets"), "", "no event: nothing to open");
+  const given = new URL(shell.siteUrl(sb, "https://sitios.mezzita.com/?tpl=bar&org=x&venue=y", "site"));
+  assert.equal(given.searchParams.get("tpl"), "bar", "a links.site from demo-start keeps its own parameters");
+  assert.equal(shell.address({ org: { name: "Casa Brasa" } }, "menu"), "casabrasa.bo/carta");
+  assert.equal(shell.address({ org: { name: "Club Órbita" } }, "site"), "cluborbita.bo");
 });
 
 // ---------------------------------------------------------------------------------------------- frame pool --
@@ -391,7 +400,7 @@ function clock() {
 test("ambient: first event at 20 s, then every 45 to 90 s, each once, at most 6", () => {
   const c = clock();
   const played = [];
-  const events = Array.from({ length: 10 }, (_, i) => ({ kind: "order", after_s: i }));
+  const events = Array.from({ length: 10 }, () => ({ kind: "order" })); // no after_s: the default pacing
   const a = new tours.Ambient(events, (i) => played.push(i), { random: () => 0, setTimeout: c.setTimeout, clearTimeout: c.clearTimeout });
   a.start();
   c.tick(19999);
@@ -429,6 +438,41 @@ test("ambient: holds while the tab is hidden and fires once when it comes back; 
   assert.deepEqual(played, [0, 1, 2], "a resumed demo does not replay the first events");
 });
 
+test("ambient: with demo-start's ambient_timeline each event plays at its after_s", () => {
+  const c = clock();
+  const played = [];
+  const a = new tours.Ambient([{ event: 0, after_s: 20 }, { event: 1, after_s: 90 }, { event: 4, after_s: 160 }], (i, ev) => played.push(ev.event), { setTimeout: c.setTimeout, clearTimeout: c.clearTimeout });
+  a.start();
+  c.tick(19999); assert.deepEqual(played, []);
+  c.tick(1); assert.deepEqual(played, [0]);
+  c.tick(69999); assert.deepEqual(played, [0]);
+  c.tick(1); assert.deepEqual(played, [0, 1]);
+  c.tick(70000); assert.deepEqual(played, [0, 1, 4]);
+});
+
+test("timeline: step_error retries once after 5 s, then stops that conversation; beat_unknown stops it at once", async () => {
+  const clock = fakeNow();
+  const played = [];
+  const tl = new tours.WaTimeline([conv(1, 0, [{ after_s: 0 }, { after_s: 0 }]), conv(2, 0, [{ after_s: 0 }, { after_s: 0 }]), conv(3, 0, [{ after_s: 0 }, { after_s: 0 }])], {
+    now: clock.now,
+    play: (c, b) => {
+      played.push([c, b]);
+      if (c === 1) return Promise.reject(api.DemoError("step_error", 500));
+      if (c === 2) return Promise.reject(api.DemoError("beat_unknown", 404));
+      return Promise.resolve({ ok: true, next: b + 1 });
+    },
+  });
+  clock.set(1); tl.tick(); await flush();
+  clock.set(4000); tl.tick(); await flush();
+  assert.deepEqual(played.filter((p) => p[0] === 1), [[1, 0]], "not before 5 s");
+  clock.set(5001); tl.tick(); await flush();
+  clock.set(60000); tl.tick(); await flush();
+  assert.deepEqual(played.filter((p) => p[0] === 1), [[1, 0], [1, 0]], "one retry, then stopped");
+  assert.deepEqual(played.filter((p) => p[0] === 2), [[2, 0]], "beat_unknown: no retry");
+  assert.deepEqual(played.filter((p) => p[0] === 3), [[3, 0], [3, 1]], "the others go on");
+  assert.equal(tl.over(), true);
+});
+
 // ------------------------------------------------------------------------------------------- backend, mock --
 
 test("backend: ?backend= is read from an allow-list; unknown or unconfigured falls back to the default", () => {
@@ -463,7 +507,7 @@ test("backend: L2/L3 error codes map to the Spanish lines; play refusals stay in
 
 test("mock: the start shape matches L2's demo-start, with a 12-conversation timeline without texts", async () => {
   const sb = await build("foodtruck", "escala", 3);
-  for (const k of ["sandbox", "key", "expires_at", "template", "label", "plan", "plans", "org", "venues", "modules", "has_bar", "seats", "links", "wa_timeline", "wa"]) {
+  for (const k of ["sandbox", "key", "expires_at", "template", "label", "plan", "plans", "org", "venues", "modules", "has_bar", "seats", "links", "wa_timeline", "ambient_timeline"]) {
     assert.ok(k in sb, "missing " + k);
   }
   assert.equal(sb.key.length, 43);
@@ -477,7 +521,10 @@ test("mock: the start shape matches L2's demo-start, with a 12-conversation time
   for (const c of sb.wa_timeline) for (const b of c.beats) assert.equal(b.text, undefined, "no texts in the timeline");
   assert.ok(!sb.wa_timeline.some((c) => c.kind === "order_delivery"), "no delivery zones: no delivery chats");
   assert.equal(sb.wa_timeline.filter((c) => c.kind === "handoff").length, 1);
-  assert.equal(sb.wa.free_text, undefined, "no free text after D2");
+  assert.equal(sb.wa, undefined, "no wa block after D2 (no scripts, no free text)");
+  assert.deepEqual(Object.keys(sb.ambient_timeline[0]).sort(), ["after_s", "event", "kind"]);
+  const staff = sb.wa_timeline[0].beats.filter((b) => b.type === "staff");
+  assert.ok(staff.length && staff.every((b) => typeof b.action === "string"), "staff beats carry their action");
 });
 
 test("mock: playing conversation 1 moves its card across the board; replays and gaps are refused or stored", async () => {
@@ -527,6 +574,7 @@ test("mock: on Arranca the reservation chats play their no_module beats", async 
   const sb = await m.start({ template: "restaurante", plan: "arranca", venues: 1 });
   const res = sb.wa_timeline.filter((c) => c.kind === "reservation");
   assert.equal(res.length, 2);
+  assert.ok(res.every((c) => c.no_module === true));
   const c = res[0];
   const did = [];
   for (let b = 0; b < c.beats.length; b++) did.push(...(await m.play(sb, { conv: c.conv, beat: b })).did.map((d) => d.action));

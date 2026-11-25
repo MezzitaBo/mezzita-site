@@ -68,7 +68,7 @@
   var GUEST_ITEMS = [
     { key: 'whatsapp', group: 'see', label: 'WhatsApp', module: ['whatsapp'] },
     { key: 'site', group: 'see', label: 'Página web' },
-    { key: 'menu', group: 'see', label: 'Menú web', module: ['menu'], link: ['menu'] },
+    { key: 'menu', group: 'see', label: 'Menú y pedido', module: ['menu'], link: ['menu'] },
     { key: 'table', group: 'do', label: 'Pedir desde la mesa', module: ['tables'], link: ['table'] },
     { key: 'reserve', group: 'do', label: 'Reservar', module: ['reservations'], link: ['reserve'] },
     { key: 'tickets', group: 'do', label: 'Comprar entradas', module: ['events'], link: ['event'] },
@@ -412,7 +412,7 @@
         '<div class="mzd-stage">' +
           '<section class="mzd-pane mzd-guest" aria-label="Lo que ve tu cliente">' +
             '<div class="mzd-pane-hd"><span class="mzd-pane-t" data-t="guest"></span><span class="mzd-subs" role="group" aria-label="Qué ver"></span>' +
-              '<button type="button" class="mzd-link mzd-full" data-act="full" data-pane="guest">Pantalla completa</button></div>' +
+              '<button type="button" class="mzd-link mzd-full" data-act="full" data-pane="guest">Ver en computadora</button></div>' +
             '<div class="mzd-pane-bd"><div class="mzd-device"><div class="mzd-screen"><div class="mzd-wa" hidden></div><div class="mzd-gframes"></div></div></div></div>' +
           '</section>' +
           '<section class="mzd-pane mzd-team" aria-label="Tu equipo y tu sistema">' +
@@ -478,9 +478,9 @@
     side(S.mside);
 
     bind();
-    S.ambient = new tours.Ambient((sb.wa && sb.wa.ambient) || [], function (i) {
+    S.ambient = new tours.Ambient(sb.ambient_timeline || (sb.wa && sb.wa.ambient) || [], function (i, ev) {
       var s = S;
-      s.client.play(s.sb, { script: 'ambient', event: i }).then(function (r) {
+      s.client.play(s.sb, { script: 'ambient', event: ev && ev.event != null ? ev.event : i }).then(function (r) {
         if (s !== S) return;
         tell(r, null);
         save();
@@ -592,7 +592,8 @@
     if (!inPhone) return;
     if (e) e.preventDefault();
     S.linkUrl = target.href;
-    var f = S.gpool.get('link');
+    var w = S.gpool.get('link');
+    var f = w && w.querySelector('iframe');
     if (f && !S.client.mock) f.src = S.linkUrl;
     showGuest('link');
     side('guest');
@@ -706,33 +707,61 @@
     return wrap;
   }
 
-  /** The demo venue's own website (L7, same origin): /demo/sitio/?org=&venue=&tpl=&evento=&backend=. */
-  function sitePath(sb, backend) {
+  function lastSegment(path) { return path ? String(path).split(/[?#]/)[0].split('/').filter(Boolean).pop() || '' : ''; }
+
+  /**
+   * The demo venue's own website, with its cart and checkout (demo-sites-design.md §6):
+   * <site>/?tpl&org&venue, plus #carta (menu), mesa=<token> (table), reservar=1, evento=<slug>. Empty when this
+   * backend has no site yet: the guest layer then falls back to the app's own guest page.
+   */
+  function siteUrl(sb, origin, key) {
+    if (!origin) return '';
+    var u;
+    try { u = new URL(origin, 'https://mezzita.com'); } catch (e) { return ''; }
+    var links = sb.links || {};
     var v = (sb.venues && sb.venues[0]) || {};
-    var ev = sb.links && sb.links.event ? String(sb.links.event).split('?')[0].split('/').filter(Boolean).pop() : '';
-    return '/demo/sitio/?org=' + encodeURIComponent((sb.org && sb.org.slug) || '') + '&venue=' + encodeURIComponent(v.slug || '') +
-      '&tpl=' + encodeURIComponent(sb.template || '') + (ev ? '&evento=' + encodeURIComponent(ev) : '') + '&backend=' + backend;
+    var set = function (k, val) { if (val && !u.searchParams.has(k)) u.searchParams.set(k, val); };
+    set('tpl', sb.template);
+    set('org', sb.org && sb.org.slug);
+    set('venue', v.slug);
+    if (key === 'table') { if (!links.table) return ''; u.searchParams.set('mesa', lastSegment(links.table)); }
+    if (key === 'reserve') u.searchParams.set('reservar', '1');
+    if (key === 'tickets') { if (!links.event) return ''; u.searchParams.set('evento', lastSegment(links.event)); }
+    if (key === 'menu') u.hash = 'carta';
+    return u.href;
   }
 
   function guestPath(key) {
     var sb = S.sb, links = sb.links || {};
-    if (key === 'site') return sitePath(sb, S.backend);
     if (key === 'link') return S.linkUrl || '';
-    var map = { menu: 'menu', table: 'table', reserve: 'reserve', tickets: 'event', entry: 'entry', wristband: 'wristband' };
+    var site = siteUrl(sb, S.client.siteOrigin(sb), key);
+    if (site && key !== 'entry' && key !== 'wristband') return site;
+    // fallback: the app's own guest pages (the venue's web menu stands in for its website)
+    var map = { site: 'menu', menu: 'menu', table: 'table', reserve: 'reserve', tickets: 'event', entry: 'entry', wristband: 'wristband' };
     return links[map[key]] ? S.client.guestUrl(sb, links[map[key]]) : '';
+  }
+
+  /** «casabrasa.bo/carta»: the address the browser bar shows; never the real host. */
+  var BAR_PATH = { site: '', menu: '/carta', table: '/mesa', reserve: '/reservar', tickets: '/entradas', entry: '/mi-entrada', wristband: '/mi-manilla', link: '/pedido' };
+  function address(sb, key) {
+    var host = String((sb.org && sb.org.name) || 'mi-local').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '') || 'milocal';
+    return host + '.bo' + (BAR_PATH[key] || '');
   }
 
   function makeGuest(key) {
     var it = findItem(S.menu, key === 'wristband' ? 'entry' : key) || { label: key };
     var f = iframe(frameName('guest', key), (SUB_LABEL[key] || it.label) + ' · demo');
-    // The venue site (L7) has its own mock, so it loads for real on every backend; the app's guest pages are
-    // stand-ins on the mock.
-    if (S.client.mock && key !== 'site') f.srcdoc = S.client.page(key, S.sb);
+    if (S.client.mock) f.srcdoc = S.client.page(key, S.sb); // the mock has stand-ins for every guest page
     else f.src = guestPath(key);
-    f.className = 'mzd-gframe';
-    f.setAttribute('data-key', key);
-    $('.mzd-gframes').appendChild(f);
-    return f;
+    var wrap = D.createElement('div');
+    wrap.className = 'mzd-gframe';
+    wrap.setAttribute('data-key', key);
+    wrap.innerHTML = '<div class="mzd-urlbar" aria-hidden="true"><i></i><i></i><i></i><span>' + icon('lock') + '<b>' +
+      esc(address(S.sb, key)) + '</b></span></div>';
+    wrap.appendChild(f);
+    $('.mzd-gframes').appendChild(wrap);
+    return wrap;
   }
 
   function dropEl(el) { if (el && el.parentNode) el.parentNode.removeChild(el); }
@@ -743,6 +772,7 @@
     if (!it || it.state !== 'on') return;
     S.guest = key === 'link' ? 'whatsapp' : key;
     var wa = key === 'whatsapp';
+    if (wa && S.full === 'guest') full('guest'); // the phone has no desktop view: back to both panes
     $('.mzd-wa').hidden = !wa;
     var fk = null;
     if (key === 'entry') {
@@ -846,7 +876,11 @@
   function full(pane) {
     S.full = S.full === pane ? '' : pane;
     S.root.setAttribute('data-full', S.full);
-    $$('[data-act="full"]').forEach(function (b) { b.textContent = S.full ? 'Ver los dos' : 'Pantalla completa'; });
+    // the guest side shows the venue site at desktop width (its side panels); the team side takes the whole stage
+    $$('[data-act="full"]').forEach(function (b) {
+      b.textContent = b.getAttribute('data-pane') === 'guest' ? (S.full === 'guest' ? 'Ver en celular' : 'Ver en computadora') :
+        (S.full === 'team' ? 'Ver los dos' : 'Pantalla completa');
+    });
     showTeam(S.team, true);
   }
 
@@ -978,8 +1012,12 @@
       s.pulsing = false;
       if (r.expires_at) s.sb.expires_at = r.expires_at;
       var wa = r.wa || {};
-      if (r.cursor != null) st.cursor = r.cursor;
-      keep(conv, wa.messages || r.messages);
+      // the cursor belongs to the conversation the pulse answered for (L2: wa.conv, wa.cursor, wa.messages)
+      var c = wa.conv || conv;
+      var cs = c === conv ? st : chatStore(c);
+      var cur = wa.cursor != null ? wa.cursor : r.cursor;
+      if (cur != null) cs.cursor = cur;
+      keep(c, wa.messages || r.messages);
       if (wa.chats) {
         s.chats = wa.chats;
         wa.chats.forEach(function (c) { s.stages[c.conv] = c.stage; });
@@ -1088,7 +1126,13 @@
         if (s !== S) return;
         tell(r, null);
         schedulePulse(300);
-      }, function (err) { if (s === S && err && err.expired) expired(); });
+      }, function (err) {
+        if (s !== S || !err) return;
+        if (err.expired) expired();
+        // the night steps need an entry bought, or checked in, first (L3: 404 no_entry / no_wristband): a hint
+        else if (err.code === 'no_entry') { S.played[k] = false; toast('Primero compra una entrada en «Comprar entradas» y vuelve a este paso.'); }
+        else if (err.code === 'no_wristband') { S.played[k] = false; toast('Primero valida una entrada en la puerta y vuelve a este paso.'); }
+      });
     }
   }
 
@@ -1120,7 +1164,8 @@
     findItem: findItem,
     FramePool: FramePool,
     frameName: frameName,
-    sitePath: sitePath,
+    siteUrl: siteUrl,
+    address: address,
     venuesFor: venuesFor,
     waLink: waLink,
     planLabel: planLabel,

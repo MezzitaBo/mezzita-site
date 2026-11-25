@@ -290,11 +290,13 @@
       st.busy = false;
       var code = err && err.code;
       var t = self.now();
-      if (code === 'conversation_stopped' || code === 'beat_failed') st.stopped = true;
+      // step_error: nothing was written; one retry after 5 s, then that conversation stops (L3)
+      if (code === 'step_error') { st.errors = (st.errors || 0) + 1; if (st.errors > 1) st.stopped = true; else st.retryAt = t + 5000; }
+      else if (code === 'conversation_stopped' || code === 'beat_failed' || code === 'beat_unknown') st.stopped = true;
       else if (code === 'module_off') self.pausedUntil = t + (o.offMs || 20000);
       else if (err && err.expired) self.ended = true;
       else if (code === 'beat_out_of_order') st.retryAt = t + 1000; // the next pulse's sync moves it on
-      else st.retryAt = t + (code === 'beat_running' ? 1500 : o.retryMs || 5000);
+      else if (code !== 'step_error') st.retryAt = t + (code === 'beat_running' ? 1500 : o.retryMs || 5000);
       if (o.onError) o.onError(st.c, err);
     });
   };
@@ -305,8 +307,9 @@
   };
 
   /**
-   * The ambient timeline (web-menu orders, reservations, waiter calls; at most 6): the first event 20 s after the demo
-   * opens, then one every 45 to 90 s, each at most once. Pauses while the tab is hidden (hold()/release()). Timers and
+   * The ambient timeline (web-menu orders, reservations, waiter calls; at most 6), each event at most once. demo-start's
+   * ambient_timeline gives each one its after_s (seconds after the demo opens); without it, the first comes 20 s after
+   * the demo opens and then one every 45 to 90 s. Pauses while the tab is hidden (hold()/release()). Timers and
    * randomness are injectable for tests.
    */
   function Ambient(events, play, opts) {
@@ -325,10 +328,17 @@
     this.due = false;
     this.stopped = false;
   }
-  Ambient.prototype.gap = function () { return this.min + Math.round(this.random() * (this.max - this.min)); };
+  Ambient.prototype.gap = function () {
+    var e = this.events, i = this.next;
+    if (e[i] && typeof e[i].after_s === 'number') {
+      var prev = i > 0 && e[i - 1] && typeof e[i - 1].after_s === 'number' ? e[i - 1].after_s : 0;
+      return Math.max(0, (e[i].after_s - prev) * 1000);
+    }
+    return i === 0 ? this.first : this.min + Math.round(this.random() * (this.max - this.min));
+  };
   Ambient.prototype.start = function () {
     this.stopped = false;
-    this.arm(this.next === 0 ? this.first : this.gap());
+    this.arm(this.gap());
   };
   Ambient.prototype.arm = function (ms) {
     var self = this;

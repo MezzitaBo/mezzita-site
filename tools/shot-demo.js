@@ -92,8 +92,7 @@ const overflow = (page) => page.evaluate(() => document.documentElement.scrollWi
       const errs = [];
       const shot = async (name) => { const f = path.join(OUT, `${sc.id}-${w}${name ? "-" + name : ""}.png`); await page.screenshot({ path: f }); files.push(f); };
       page.on("pageerror", (e) => errs.push(e.message));
-      // /demo/sitio/ is L7's page (its own PR): until it is merged it answers 404 inside the phone.
-      page.on("console", (m) => m.type() === "error" && !/fonts\.g|favicon/.test(m.text()) && !/\/demo\/sitio\//.test((m.location() || {}).url || "") && errs.push(m.text()));
+      page.on("console", (m) => m.type() === "error" && !/fonts\.g|favicon/.test(m.text()) && errs.push(m.text()));
       try {
         await openShell(page, sc);
         // first open: the «¿Cómo quieres verlo?» card
@@ -127,6 +126,15 @@ const overflow = (page) => page.evaluate(() => document.documentElement.scrollWi
             if (cur !== "true") note(where, `menu item ${k} did not open`);
           }
           await page.mouse.move(w - 10, h - 10);
+          // the venue site in its browser bar, then at desktop width («Ver en computadora»)
+          await page.click('.mzd-menu [data-item="menu"]');
+          await page.mouse.move(w - 10, h - 10);
+          const bar = await page.textContent('.mzd-gframe:not([hidden]) .mzd-urlbar');
+          if (!/\.bo\/carta$/.test(bar.trim())) note(where, "browser bar shows " + bar);
+          await page.click('.mzd-guest [data-act="full"]');
+          await page.waitForTimeout(200);
+          await shot("web-computadora");
+          await page.click('.mzd-guest [data-act="full"]');
         } else {
           // phone: the «Demo» sheet, then every item in two taps
           await page.click(".mzd-mbtn");
@@ -173,7 +181,8 @@ const overflow = (page) => page.evaluate(() => document.documentElement.scrollWi
           const wa = await page.$('.mzd-modal [data-tour="whatsapp"]');
           if (wa) {
             await wa.click();
-            const waitStep = (n, ms) => page.waitForFunction((x) => document.querySelector(".mzd-rail-k").textContent.includes(`paso ${x} de`), n, { timeout: ms || 45000 });
+            // at step n or past it: on a loaded machine the 10x mock can move faster than the polling
+            const waitStep = (n, ms) => page.waitForFunction((x) => { const m = /paso (\d+) de/.exec(document.querySelector(".mzd-rail-k").textContent); return m && Number(m[1]) >= x; }, n, { timeout: ms || 45000 });
             await shot("recorrido-1");
             await waitStep(4);
             await shot("recorrido-4");
