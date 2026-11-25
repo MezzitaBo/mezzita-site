@@ -5,6 +5,8 @@ const fs = require("fs");
 const path = require("path");
 
 const ROOT = path.resolve(__dirname, "../..");
+// Precios en un solo archivo, el mismo que usa build.py para el sitio.
+const PRECIOS = JSON.parse(fs.readFileSync(path.join(ROOT, "src", "_data", "precios.json"), "utf8"));
 const A = (f) => path.join(ROOT, "assets", f);
 const FAV = fs.readFileSync(A("favicon.svg"), "utf8");
 const LOGO = fs.readFileSync(A("logo.svg"), "utf8");
@@ -43,11 +45,11 @@ const OG = page(`
     </div>
   </div>
   <div style="position:absolute;left:72px;right:72px;bottom:44px;display:flex;justify-content:space-between;font-size:21px;font-weight:600">
-    <span>mezzita.com</span><span style="color:var(--ink-2)">Desde 400 Bs al mes · 0 % si cobras con tu QR · 7 días hábiles</span>
+    <span>mezzita.com</span><span style="color:var(--ink-2)">Desde 400 Bs al mes · 0 % de comisión · 7 días hábiles</span>
   </div>
 </div>`);
 
-const chips = (size) => [["#0F7A4B", "Pedido en mesa, delivery y recojo"], ["#DA291C", "Cobro por QR verificado"], ["#FFC72C", "Panel de pedidos y caja"]]
+const chips = (size) => [["#0F7A4B", "Pedido en mesa, delivery y recojo"], ["#DA291C", "0 % de comisión"], ["#FFC72C", "Panel de pedidos y caja"]]
   .map(([c, t], i) => `<div style="display:flex;align-items:center;gap:.55em;background:#fff;border:2px solid var(--ink);box-shadow:5px 5px 0 var(--ink);border-radius:14px;padding:.55em 1em;font-weight:600;font-size:${size}px;margin-right:${[0, 60, 20][i]}px"><i style="width:.75em;height:.75em;border-radius:50%;background:${c};border:2px solid var(--ink)"></i>${t}</div>`).join("");
 
 const LI_PERFIL = page(`
@@ -93,17 +95,17 @@ const CHECKLIST = page(`
 ${item(1, "Datos del local", "Nombre comercial, dirección, horarios y un correo para la cuenta del panel. Si haces delivery, tus zonas y el costo de envío de cada una. En Crece y Escala, cuántas mesas tienes.", "Un mensaje de texto alcanza · 3 min")}
 ${item(2, "Tu carta con precios", "Foto de la carta, planilla o audio, con variantes («mediana, familiar»). Si tienes fotos de tus platos, mándalas también. Nosotros la ordenamos.", "Después la cambias tú desde el panel cuando quieras · 5 min")}
 ${item(3, "Carnet o NIT del titular", "Una foto del carnet de identidad o del NIT de quien recibirá los cobros.", "Una foto · 2 min")}
-${item(4, "Comprobante de tu cuenta bancaria", "Una captura o foto que muestre el titular y el número de la cuenta donde recibes los cobros por QR verificado.", "Una captura · 2 min")}
+${item(4, "El QR de cobro de tu banco", "Una captura del QR de la cuenta donde quieres recibir lo que vendes. Tu cliente paga ahí y la plata va directo a tu cuenta.", "Una captura · 2 min")}
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;break-inside:avoid">
 <div style="border:2px dashed var(--ink);border-radius:12px;padding:14px 16px"><p class="eyebrow" style="font-family:'Instrument Sans'">Lo que no necesitas</p><ul style="margin-top:6px">
 <li>Impresoras térmicas ni cables: el panel usa el celular, la tablet o la computadora que ya tienes.</li><li>Darnos acceso a tu cuenta de Google: no entramos a tu ficha ni la configuramos.</li><li>Textos: los escribimos con lo que nos cuentes por audio.</li><li>Saber de dominios o de hosting.</li><li>Computadora: todo funciona desde tu celular.</li></ul></div>
 <div style="border:2px dashed var(--ink);border-radius:12px;padding:14px 16px"><p class="eyebrow" style="font-family:'Instrument Sans'">Qué pasa después</p><ul style="margin-top:6px">
-<li><b>Día 1:</b> cargamos tu carta y tus zonas, y empezamos a activar tu cobro por QR verificado.</li><li><b>Días 1 a 5:</b> armamos tu menú web y tu Panel de pedidos y caja. Apruebas.</li><li><b>Día 7 hábil como máximo:</b> todo activo (apuntamos a 72 horas hábiles). Te mandamos el PDF con tus QR.</li><li><b>Tu ficha de Google:</b> te damos el QR de reseñas y el enlace de tu menú, con un video corto para que los pongas tú.</li></ul></div>
+<li><b>Día 1:</b> cargamos tu carta y tus zonas, y ponemos el QR de tu banco en tu menú.</li><li><b>Días 1 a 5:</b> armamos tu menú web y tu Panel de pedidos y caja. Apruebas.</li><li><b>Día 7 hábil como máximo:</b> todo activo (apuntamos a 72 horas hábiles). Te mandamos el PDF con tus QR.</li><li><b>Tu ficha de Google:</b> te damos el QR de reseñas y el enlace de tu menú, con un video corto para que los pongas tú.</li></ul></div>
 </div>
 <div style="background:var(--red);color:#fff;border-radius:12px;padding:14px 18px;margin-top:16px;break-inside:avoid">
-<p style="font-weight:700;font-size:13pt;line-height:1.35">Instalación 2.900 Bs hasta el 30 de noviembre de 2026 (desde el 1 de diciembre, 3.500 Bs) · Arranca 400 Bs, Crece 600 Bs, Escala 900 Bs al mes</p>
-<p style="font-size:9.5pt;margin-top:4px">Comisión solo cuando el pago pasa por nuestro sistema y se verifica solo: 6, 5 o 4 % en delivery y recojo según el plan. Si cobras con tu QR o en efectivo, 0 %. Precios con IVA incluido. En línea en 7 días hábiles o tu primer mes es gratis.</p></div>
+<p style="font-weight:700;font-size:13pt;line-height:1.35">Instalación ${PRECIOS.install} Bs · Arranca 400 Bs, Crece 600 Bs, Escala 900 Bs al mes · 0 % de comisión</p>
+<p style="font-size:9.5pt;margin-top:4px">0 % de comisión, en la mesa, para llevar y a domicilio: lo que vendes va directo a tu cuenta. Precios con IVA incluido. En línea en 7 días hábiles o tu primer mes es gratis.</p></div>
 <div class="ft"><span>mezzita.com · WhatsApp +591 62506518 · hola@mezzita.com</span><span>Mezzita · del equipo detrás de Levisoft · Bolivia</span></div>`, DOC_CSS);
 
 const blank = (w) => `<span style="display:inline-block;width:${w}px;border-bottom:1.5px solid var(--ink)"></span>`;
@@ -120,35 +122,33 @@ const CONTRATO = page(`
 <p>Mezzita entrega y mantiene para el local un sistema de pedidos compuesto por:</p>
 <ul><li>Menú web propio con fotos, variantes y notas, donde el cliente final arma su pedido.</li>
 <li>Pedidos en el local por número o nombre; en Crece y Escala, además, un QR por mesa en PDF y control de mesas en el panel.</li>
-<li>Delivery con zonas y costos de envío que carga el local, y recojo, con cobro por QR verificado antes de que el pedido entre a cocina. Los repartidores son del local y el cliente final les paga el envío.</li>
+<li>Delivery con zonas y costos de envío que carga el local, y recojo, cobrados con el QR del banco del propio local o en efectivo, con confirmación de la caja en el panel. Los repartidores son del local y el cliente final les paga el envío.</li>
 <li>Panel de pedidos y caja en celular, tablet o computadora del cliente, con usuarios para cocina y caja, exportación a CSV y API propia.</li>
 <li>Avisos de estado por WhatsApp para delivery y recojo, fidelización con sellos digitales y base de clientes exportable con permiso pedido al ordenar.</li>
 <li>Reseñas: QR imprimible para el mostrador que lleva a las reseñas de Google del local, y mensaje por WhatsApp con el enlace después de la comida a todos los clientes finales que dieron permiso, sin premios ni filtros.</li>
 <li>Cambios de carta ilimitados desde el panel, más los cambios hechos por Mezzita que indica el plan (sección 3), cada uno en 1 día hábil.</li>
 <li>Reporte mensual de una página y soporte por WhatsApp con una persona.</li>
-<li><b>Crece</b> suma cobro verificado en mesa (opcional) y reservas desde un enlace en el menú web. <b>Escala</b> suma hasta 3 sucursales con menú central y caja consolidada, reporte avanzado, factura electrónica del SIN mediante un proveedor certificado que se cobra aparte al costo, y gerente de cuenta con revisión mensual de 30 minutos y soporte prioritario.</li></ul>
+<li><b>Crece</b> suma que la mesa pague su cuenta desde el celular, con confirmación de la caja, y reservas desde un enlace en el menú web. <b>Escala</b> suma hasta 3 sucursales con menú central y caja consolidada, reporte avanzado, factura electrónica del SIN mediante un proveedor certificado que se cobra aparte al costo, y gerente de cuenta con revisión mensual de 30 minutos y soporte prioritario.</li></ul>
 <p><b>No incluido:</b> gestión de la ficha de Google Maps del cliente (Mezzita no entra a su cuenta de Google ni la configura; entrega el QR de reseñas y el enlace del menú con un video de cómo ponerlos), impresora térmica, repartidores, impresión de QR y acrílicos, factura electrónica en Arranca y Crece (se cotiza aparte), conectores a POS o contabilidad (se cotizan aparte), fotos de estudio con IA (opcional, 585 Bs por 15 platos), anuncios y redes sociales.</p>
 <h2>3. Precio</h2>
 <table style="width:100%;border-collapse:collapse;font-size:9.5pt" border="1" cellpadding="8">
 <tr style="background:var(--paper)"><th align="left">Concepto</th><th align="left">Arranca</th><th align="left">Crece</th><th align="left">Escala</th></tr>
-<tr><td>Instalación (pago único, al firmar)</td><td colspan="3">2.900 Bs si se paga hasta el 30 de noviembre de 2026; 3.500 Bs desde el 1 de diciembre de 2026.</td></tr>
+<tr><td>Instalación (pago único, al firmar)</td><td colspan="3">${PRECIOS.install} Bs.</td></tr>
 <tr><td>Mensualidad (por adelantado)</td><td>400 Bs</td><td>600 Bs</td><td>900 Bs</td></tr>
-<tr><td>Comisión en delivery y recojo con cobro verificado</td><td>6 %</td><td>5 %</td><td>4 %</td></tr>
-<tr><td>Comisión en mesa con cobro verificado (opcional)</td><td>No aplica</td><td>4,5 %</td><td>3,5 %</td></tr>
-<tr><td>Cobro en el local con QR propio o en efectivo</td><td>0 %</td><td>0 %</td><td>0 %</td></tr>
-<tr><td>Saldo inicial de promociones por WhatsApp (vence a los 90 días)</td><td>250 Bs</td><td>300 Bs</td><td>300 Bs</td></tr>
+<tr><td>Comisión por pedido (mesa, mostrador, para llevar y a domicilio)</td><td>0 %</td><td>0 %</td><td>0 %</td></tr>
+<tr><td>Saldo inicial de promociones por WhatsApp (vence a los ${PRECIOS.promo_days} días)</td><td>${PRECIOS.promo_arranca} Bs</td><td>${PRECIOS.promo_crece} Bs</td><td>${PRECIOS.promo_crece} Bs</td></tr>
 <tr><td>Cambios de carta hechos por Mezzita, al mes</td><td>2</td><td>4</td><td>Ilimitados</td></tr></table>
 <ul style="margin-top:6px"><li>Los precios son en bolivianos e incluyen IVA.</li>
-<li>La comisión se cobra solo sobre pagos que pasan por el sistema de Mezzita y se verifican solos. Incluye la comisión del procesador de pagos (CUCU). Se calcula sobre el monto de la comida, nunca sobre el costo de envío. Se liquida en la factura del mes siguiente.</li>
-<li>Promociones por WhatsApp: solo a clientes finales que dieron permiso al pedir. Recargas a 1,5 Bs por mensaje entregado, en paquetes de 100 (150 Bs). El saldo vencido o no usado no se devuelve.</li>
+<li>Mezzita no cobra comisión por pedido: 0 % en la mesa, en el mostrador, para llevar y a domicilio. El cliente final paga con el QR del banco del local o en efectivo; el dinero va directo a la cuenta del local y su caja confirma cada pago en el panel.</li>
+<li>Promociones por WhatsApp: solo a clientes finales que dieron permiso al pedir. Recargas a ${PRECIOS.wa_msg} Bs por mensaje entregado, en paquetes de ${PRECIOS.wa_pack_msgs} (${PRECIOS.wa_pack} Bs). El saldo vencido o no usado no se devuelve.</li>
 <li>Sucursales: en Arranca y Crece, cada sucursal adicional paga el 50 % de la instalación y su propia mensualidad. En Escala, cada sucursal extra sobre las 3 incluidas paga el 50 % de la instalación.</li></ul>
 <h2>4. Contrato de 12 meses e «Instalación de vuelta»</h2>
 <ul><li>Si el cliente elige la modalidad de 12 meses, el servicio incluye un dominio .com propio, registrado a nombre del cliente.</li>
-<li>Desde el mes 13, Mezzita aplica un crédito de hasta 200 Bs por mes en la mensualidad, hasta que la suma de los créditos cubra la instalación pagada. El último mes, el crédito es solo el saldo que falte.</li>
+<li>Desde el mes 13, Mezzita aplica un crédito de hasta ${PRECIOS.credit_month} Bs por mes en la mensualidad, hasta que la suma de los créditos cubra la instalación pagada. El último mes, el crédito es solo el saldo que falte.</li>
 <li>El crédito es un descuento en la mensualidad; no se paga en efectivo ni se transfiere. Si el cliente cancela el contrato de 12 meses antes de cumplirlo, pierde el crédito. Si cancela después del mes 12, el crédito pendiente no se paga en efectivo.</li>
 <li>En la modalidad mes a mes no hay crédito.</li></ul>
 <h2>5. Garantía «7 Días o No Pagas el Mes»</h2>
-<p>Mezzita se obliga a dejar activos el menú web, los QR y el Panel de pedidos y caja en 7 días hábiles desde la recepción del pago de instalación y de los datos del checklist (sección 6). Si no cumple, el primer mes es gratis: descuenta el 100 % de la primera mensualidad en el siguiente cobro, sin reclamo previo. Mezzita apunta a 72 horas hábiles. La garantía no cubre demoras por datos incompletos o aprobaciones pendientes del cliente (el plazo se pausa), la aprobación de la cuenta de cobro verificado por el procesador de pagos cuando depende de trámites del titular, ni fuerza mayor.</p>
+<p>Mezzita se obliga a dejar activos el menú web, los QR y el Panel de pedidos y caja en 7 días hábiles desde la recepción del pago de instalación y de los datos del checklist (sección 6). Si no cumple, el primer mes es gratis: descuenta el 100 % de la primera mensualidad en el siguiente cobro, sin reclamo previo. Mezzita apunta a 72 horas hábiles. La garantía no cubre demoras por datos incompletos o aprobaciones pendientes del cliente (el plazo se pausa), los trámites del banco del cliente para su QR de cobro cuando dependen del titular, ni fuerza mayor.</p>
 <h2>6. Obligaciones del cliente</h2>
 <ul><li>Entregar los datos del checklist: datos del local (nombre, dirección, horarios, correo para el panel, zonas y costos de envío si hace delivery, cantidad de mesas en Crece y Escala), carta con precios, carnet o NIT del titular y comprobante de la cuenta bancaria.</li>
 <li>Aprobar el menú web en un plazo razonable (máximo 2 días hábiles por revisión).</li>
