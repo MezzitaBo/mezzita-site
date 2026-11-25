@@ -1,0 +1,82 @@
+<!--{"title":"Sitio web de ejemplo · Demo de Mezzita","desc":"La página web propia de un negocio de ejemplo, hecha con Mezzita: carta en vivo, horario, reservas y entradas.","path":"/demo/sitio/","nav":"","noindex":true,"scripts":["demo-vivo/sitio.js"],"head":"<script>document.documentElement.setAttribute('data-bg','none')</script><link rel=\"stylesheet\" href=\"/assets/demo-vivo/sitio.css\">"}-->
+<div class="mzs" id="mzs" data-look="calido" aria-busy="true">
+  <div class="mzs-state" id="mzs-state" role="status">
+    <div class="mzs-loader" aria-hidden="true"><i></i></div>
+    <p id="mzs-state-msg">Cargando…</p>
+    <div class="mzs-state-actions" id="mzs-state-actions" hidden>
+      <button type="button" class="mzs-btn" id="mzs-retry">Reintentar</button>
+      <a class="mzs-link" href="/demo/" target="_top">Abrir el demo de nuevo</a>
+    </div>
+  </div>
+
+  <div class="mzs-page" id="mzs-page" hidden>
+    <header class="mzs-hd">
+      <a class="mzs-brand" href="#inicio">
+        <span class="mzs-logo"><img id="mzs-logo" alt="" width="44" height="44" hidden><span class="mzs-mono" id="mzs-mono" aria-hidden="true"></span></span>
+        <span class="mzs-name" id="mzs-name"></span>
+      </a>
+      <nav class="mzs-nav" aria-label="Secciones"><a href="#carta">Carta</a><a href="#horario">Horario</a><a href="#ubicacion">Ubicación</a></nav>
+      <a class="mzs-btn mzs-btn-sm" data-link="menu">Pedir</a>
+    </header>
+
+    <section class="mzs-hero" id="inicio" aria-labelledby="mzs-title">
+      <img class="mzs-hero-img" id="mzs-hero" alt="" hidden>
+      <div class="mzs-hero-in">
+        <p class="mzs-open" id="mzs-open"></p>
+        <h1 class="mzs-title" id="mzs-title"></h1>
+        <p class="mzs-tag" id="mzs-tag"></p>
+        <div class="mzs-cta">
+          <a class="mzs-btn" data-link="menu">Ver la carta y pedir</a>
+          <a class="mzs-btn mzs-btn-alt" data-link="reserve" hidden>Reservar</a>
+          <a class="mzs-btn mzs-btn-alt" data-link="event" hidden>Entradas</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="mzs-event" id="mzs-event" aria-labelledby="mzs-event-name" hidden>
+      <div class="mzs-in mzs-event-in">
+        <div>
+          <p class="mzs-kicker" id="mzs-event-when"></p>
+          <h2 class="mzs-event-name" id="mzs-event-name"></h2>
+          <p class="mzs-event-price" id="mzs-event-price"></p>
+        </div>
+        <a class="mzs-btn" data-link="event">Comprar entradas</a>
+      </div>
+    </section>
+
+    <section class="mzs-sec" id="carta" aria-labelledby="mzs-carta-t">
+      <div class="mzs-in">
+        <div class="mzs-sec-hd">
+          <h2 id="mzs-carta-t">Lo más pedido</h2>
+          <a class="mzs-link" data-link="menu">Ver toda la carta <span aria-hidden="true">→</span></a>
+        </div>
+        <ul class="mzs-dishes" id="mzs-dishes"></ul>
+      </div>
+    </section>
+
+    <section class="mzs-sec mzs-info">
+      <div class="mzs-in mzs-info-in">
+        <div id="horario">
+          <h2>Horario</h2>
+          <ul class="mzs-hours" id="mzs-hours"></ul>
+        </div>
+        <div id="ubicacion">
+          <h2>Dónde estamos</h2>
+          <p class="mzs-address" id="mzs-address"></p>
+          <div class="mzs-cta">
+            <a class="mzs-btn" data-link="menu">Pedir para llevar o en la mesa</a>
+            <a class="mzs-btn mzs-btn-alt" data-link="reserve" hidden>Reservar una mesa</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="mzs-ft">
+      <div class="mzs-in mzs-ft-in">
+        <span id="mzs-copy"></span>
+        <a class="mzs-made" href="https://mezzita.com/" target="_blank" rel="noopener">Hecho con <b>Mezzita</b></a>
+      </div>
+    </footer>
+  </div>
+  <p class="mzs-toast" id="mzs-toast" role="status" hidden></p>
+</div>
