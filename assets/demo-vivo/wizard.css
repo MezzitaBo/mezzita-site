@@ -17,11 +17,11 @@
 .mzw-sub{font-size:var(--step-1);color:var(--ink-2);line-height:1.45;max-width:40rem;margin-top:-.2rem}
 
 .mzw-cards{display:grid;gap:.75rem;margin-top:.6rem}
-.mzw-cards-6{grid-template-columns:minmax(0,1fr)}
+.mzw-cards-4{grid-template-columns:minmax(0,1fr)}
 .mzw-cards-3{grid-template-columns:repeat(auto-fit,minmax(min(100%,16rem),1fr))}
 .mzw-cards-2{grid-template-columns:minmax(0,1fr)}
-@media (min-width:560px){.mzw-cards-6,.mzw-cards-2{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (min-width:900px){.mzw-cards-6{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:560px){.mzw-cards-4,.mzw-cards-2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:900px){.mzw-cards-4{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .mzw-card{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:.85rem;min-height:64px;padding:1rem 1.05rem;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);box-shadow:var(--shadow-sm);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color var(--t-fast) ease,box-shadow var(--t-fast) ease,transform var(--t-fast) var(--ease)}
 .mzw-card:active{transform:scale(.985)}
 @media (hover:hover) and (pointer:fine){.mzw-card:hover{border-color:var(--ink);transform:translateY(-1px)}}
@@ -89,10 +89,10 @@
 }
 /* paso 1 en varias columnas: icono y marca arriba, texto abajo */
 @media (min-width:560px){
-  .mzw-cards-6 .mzw-card{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr;grid-template-areas:"ic tick" "ct ct";align-content:start;row-gap:.85rem;padding:1.1rem 1.1rem 1.2rem}
-  .mzw-cards-6 .mzw-ic{grid-area:ic}
-  .mzw-cards-6 .mzw-tick{grid-area:tick}
-  .mzw-cards-6 .mzw-ct{grid-area:ct;align-self:start}
+  .mzw-cards-4 .mzw-card{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr;grid-template-areas:"ic tick" "ct ct";align-content:start;row-gap:.85rem;padding:1.1rem 1.1rem 1.2rem}
+  .mzw-cards-4 .mzw-ic{grid-area:ic}
+  .mzw-cards-4 .mzw-tick{grid-area:tick}
+  .mzw-cards-4 .mzw-ct{grid-area:ct;align-self:start}
 }
 
 /* en el celular la barra fija de WhatsApp del sitio se queda (dueño: no se quita ningún botón de WhatsApp);

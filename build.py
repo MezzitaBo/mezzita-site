@@ -52,7 +52,7 @@ SERVICE = {"@context": "https://schema.org", "@type": "Service", "name": "Pedido
            "offers": [
                *[{"@type": "Offer", "name": "Plan " + name, "price": num(PRECIOS[key]), "priceCurrency": "BOB",
                   "priceSpecification": {"@type": "UnitPriceSpecification", "price": num(PRECIOS[key]), "priceCurrency": "BOB", "unitCode": "MON"}}
-                 for name, key in (("Arranca", "plan_arranca"), ("Crece", "plan_crece"), ("Escala", "plan_escala"))],
+                 for name, key in (("Arranca", "plan_arranca"), ("Crece", "plan_crece"), ("Escala", "plan_escala"), ("Noche", "plan_nightlife"))],
                {"@type": "Offer", "name": "Instalación", "price": str(PRECIOS["install_num"]), "priceCurrency": "BOB"}]}
 
 
@@ -468,8 +468,8 @@ def llms_txt(pages):
     out = ["# Mezzita", "",
            "> Mezzita instala en negocios de comida de Bolivia un menú web propio donde el cliente pide y paga desde su celular: QR por mesa, delivery y recojo, cobro con el QR del banco del propio local, 0 % de comisión, y Panel de pedidos y caja. Es el equipo detrás de Levisoft, con diez años construyendo sitios y sistemas.", "",
            "## Producto y precio", "",
-           "- Producto: Pedidos con QR, para restaurantes, cafés, pizzerías, heladerías, food trucks, bares de comida y franquicias en Bolivia. Tres planes al mes: Arranca 400 Bs, Crece 600 Bs (QR por mesa, plano de mesas, reservas e inventario por receta) y Escala 900 Bs (hasta 3 sucursales, factura electrónica al costo, gerente de cuenta).",
-           f"- Instalación: {PRECIOS['install']} Bs, igual en los tres planes. Precios con IVA incluido.",
+           f"- Producto: Pedidos con QR, para pizzerías, heladerías, restaurantes, bares, cafés y franquicias en Bolivia. Tres planes al mes: Arranca {PRECIOS['plan_arranca']} Bs, Crece {PRECIOS['plan_crece']} Bs (QR por mesa, plano de mesas, reservas e inventario por receta) y Escala {PRECIOS['plan_escala']} Bs (hasta 3 sucursales, factura electrónica al costo, gerente de cuenta). Para discotecas y eventos, Plan Noche: {PRECIOS['plan_nightlife']} Bs al mes (eventos y entradas, relacionadores, puerta con carnet y lista de veto, manillas con saldo; las manillas físicas se cobran aparte, por unidad).",
+           f"- Instalación: {PRECIOS['install']} Bs, igual en todos los planes. Precios con IVA incluido.",
            "- Comisión: 0 % siempre, en la mesa, en el mostrador, para llevar y a domicilio. El cliente paga con el QR del banco del local o en efectivo; el dinero va directo a la cuenta del local y la caja confirma el pago en el panel.",
            f"- WhatsApp: tablero de chats y asistente con IA opcional que responde y arma pedidos; avisos de estado del pedido incluidos; saldo inicial de promociones de {PRECIOS['promo_arranca']} o {PRECIOS['promo_crece']} Bs (vence a los {PRECIOS['promo_days']} días) y recargas a {PRECIOS['wa_msg']} Bs por mensaje, solo a clientes que dieron permiso.",
            "- Permanencia: mes a mes con 30 días de aviso, o contrato de 12 meses con dominio .com e Instalación de vuelta (desde el mes 13, hasta 200 Bs por mes de descuento hasta cubrir la instalación).",
