@@ -23,9 +23,9 @@
       <p class="c-label" style="margin-top:1.2rem">Plan</p>
       <div class="tabs" role="group" aria-label="Plan" style="margin-top:.5rem">
         <button type="button" data-cplan="auto" aria-pressed="true">El que más me conviene</button>
-        <button type="button" data-cplan="esencial" aria-pressed="false">Arranca · 400 Bs</button>
-        <button type="button" data-cplan="salon" aria-pressed="false">Crece · 600 Bs</button>
-        <button type="button" data-cplan="cadena" aria-pressed="false">Escala · 900 Bs</button>
+        <button type="button" data-cplan="esencial" data-mes="{{precio:plan_arranca}}" aria-pressed="false">Arranca · {{precio:plan_arranca}} Bs</button>
+        <button type="button" data-cplan="salon" data-mes="{{precio:plan_crece}}" aria-pressed="false">Crece · {{precio:plan_crece}} Bs</button>
+        <button type="button" data-cplan="cadena" data-mes="{{precio:plan_escala}}" aria-pressed="false">Escala · {{precio:plan_escala}} Bs</button>
       </div>
       <p class="fine" id="c-note"></p>
     </div>
@@ -52,7 +52,7 @@
 <section class="sec-tight"><div class="wrap">
   <div class="grid-3 howcalc">
     <div><span class="gi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V9M10 19V5M16 19v-8M22 19H2"/></svg></span><b>Cómo calculamos lo que se queda la app</b><p>Pedidos de delivery y recojo del mes, por tu ticket promedio sin envío, por la comisión que te cobra la app. Si no la conoces, revisa tu liquidación: según la región suele estar entre 20 y 30 %. Sin factores ocultos.</p></div>
-    <div><span class="gi" aria-hidden="true">{{icon:qr}}</span><b>Cómo calculamos lo que nos pagarías</b><p>Solo la mensualidad: 400 Bs (Arranca), 600 Bs (Crece) o 900 Bs (Escala). La comisión es 0 %, en la mesa, para llevar y a domicilio. Tu cliente paga con el QR de tu banco o en efectivo y la plata va directo a tu cuenta.</p></div>
+    <div><span class="gi" aria-hidden="true">{{icon:qr}}</span><b>Cómo calculamos lo que nos pagarías</b><p>Solo la mensualidad: {{precio:plan_arranca}} Bs (Arranca), {{precio:plan_crece}} Bs (Crece) o {{precio:plan_escala}} Bs (Escala). La comisión es 0 %, en la mesa, para llevar y a domicilio. Tu cliente paga con el QR de tu banco o en efectivo y la plata va directo a tu cuenta.</p></div>
     <div><span class="gi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 17l-5.4 2.8 1.1-6.1L3.2 9.4l6.1-.8z"/></svg></span><b>Qué hacer con el número</b><p>Si tu mensualidad es más de lo que hoy se queda la app, no te conviene todavía y te lo diremos. Si es menos, la diferencia es tuya cada mes. Elegimos el plan por costo; si necesitas QR por mesa, mira Crece, y si tienes varias sucursales, Escala.</p></div>
   </div>
 </div></section>

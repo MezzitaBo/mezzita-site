@@ -9,5 +9,9 @@
   "wa_pack_msgs": "100",
   "promo_arranca": "250",
   "promo_crece": "300",
-  "promo_days": "90"
+  "promo_days": "90",
+  "plan_arranca": "400",
+  "plan_crece": "600",
+  "plan_escala": "900",
+  "plan_nightlife": "1.500"
 }
