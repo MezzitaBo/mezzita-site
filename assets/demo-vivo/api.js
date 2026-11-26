@@ -11,9 +11,8 @@
 })(typeof window !== 'undefined' ? window : globalThis, function (root) {
   'use strict';
 
-  // Build constant. Switch to 'demo' once the mezzita-demo project exists (owner decision 1), or to 'staging' for
-  // the interim launch, when demo-start/pulse/play are deployed there.
-  var DEFAULT_BACKEND = 'mock';
+  // Build constant: the mezzita-demo project (owner decision 1). ?backend=mock|staging still overrides it.
+  var DEFAULT_BACKEND = 'demo';
   // site: the demo venue websites (demo-sites-design.md §6, sitios.mezzita.com); '' = not deployed for that backend
   // yet, and the guest layers fall back to the app's own guest pages (/m/, /mesa/, /e/). demo-start's links.site wins.
   var BACKENDS = {

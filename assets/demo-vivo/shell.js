@@ -196,6 +196,43 @@
     this.list.splice(0).forEach(function (x) { self.drop(x.el, x.key); });
   };
 
+  /**
+   * new WaChats(phone): the 12 chats' messages for the phone, as demo-pulse reports them. Each message is kept once, by
+   * its database row id, with that chat's pulse cursor. demo-play's replies are never kept: they carry the WhatsApp
+   * message id, not the row id, so the next pulse would bring the same message again under another id (staging check
+   * G4: every message twice after switching chats). A reply only asks for a pulse.
+   */
+  function WaChats(phone) {
+    this.phone = phone;
+    this.by = {};
+  }
+  WaChats.prototype.chat = function (conv) {
+    return this.by[conv] || (this.by[conv] = { list: [], ids: {}, cursor: null });
+  };
+  /** Puts chat `conv` on the phone with the messages known so far. */
+  WaChats.prototype.show = function (conv) {
+    this.phone.show(conv, this.chat(conv).list);
+  };
+  /** A demo-play reply for chat `conv` (its messages are not kept, see above): true when that chat is on the phone,
+      so the shell pulses right away. */
+  WaChats.prototype.played = function (conv, reply, view) {
+    return conv === view;
+  };
+  /** A pulse's answer for chat `conv`: keeps each new message once and the cursor. The phone gets the new ones when
+      `conv` is the chat on screen (`view`). Returns how many were new. */
+  WaChats.prototype.pulsed = function (conv, messages, cursor, view) {
+    var st = this.chat(conv), fresh = [];
+    (messages || []).forEach(function (m) {
+      if (!m || !m.id || st.ids[m.id]) return;
+      st.ids[m.id] = true;
+      st.list.push(m);
+      fresh.push(m);
+    });
+    if (cursor != null) st.cursor = cursor;
+    if (conv === view && fresh.length) this.phone.add(fresh);
+    return fresh.length;
+  };
+
   /** Venues when the visitor switches plan (§2 mapping: Escala shows 3; Nightlife keeps 2 when it had several). */
   function venuesFor(plan, current) {
     if (plan === 'escala') return 3;
@@ -273,8 +310,8 @@
       params: params, backend: backend, client: api.client(backend), sb: null, menu: [], state: null,
       guest: null, guestSub: null, team: ['owner'], mside: 'guest', full: '', tour: null, toastT: null, toastQ: [], pt: null,
       pulsing: false, expired: false, played: {}, welcomeSeen: false, ambientNext: 0, timers: [],
-      // WhatsApp: messages per conversation {list, ids, cursor}, the one on the phone, the board as last pulsed
-      msgs: {}, view: 1, chats: [], stages: {}, follow: null, approved: {}, told: {}, clockMs: 0, synced: false,
+      // WhatsApp: messages per conversation (WaChats, made with the phone), the one on the phone, the board as last pulsed
+      convs: null, view: 1, chats: [], stages: {}, follow: null, approved: {}, told: {}, clockMs: 0, synced: false,
     };
     var s = S;
     var h = host();
@@ -465,6 +502,7 @@
       onPick: viewChat,
       onLink: openLink,
     });
+    S.convs = new WaChats(S.phone);
 
     S.tpool = new FramePool({ max: POOL_TEAM, make: makeSeat, drop: dropEl });
     S.gpool = new FramePool({ max: POOL_GUEST, make: makeGuest, drop: dropEl });
@@ -505,7 +543,7 @@
     if (S.waSaved) S.timeline.sync(S.waSaved.done, S.waSaved.stopped); // the progress this tab had before a reload
     S.tickT = setInterval(function () { if (S && S.synced && !D.hidden) S.timeline.tick(); }, 500);
 
-    S.phone.show(S.view, []);
+    S.convs.show(S.view);
     save();
     pulse();
     if (!S.welcomeSeen) welcome();
@@ -519,33 +557,19 @@
 
   // ------------------------------------------------------------------------------------------ WhatsApp --
 
-  function chatStore(conv) {
-    return S.msgs[conv] || (S.msgs[conv] = { list: [], ids: {}, cursor: null });
-  }
-  /** Keeps a conversation's messages; shows them if it is the one on the phone. */
-  function keep(conv, messages) {
-    var st = chatStore(conv), fresh = [];
-    (messages || []).forEach(function (m) {
-      if (!m || !m.id || st.ids[m.id]) return;
-      st.ids[m.id] = true;
-      st.list.push(m);
-      fresh.push(m);
-    });
-    if (conv === S.view && fresh.length) S.phone.add(fresh);
-  }
-
   function viewChat(conv) {
     S.view = conv;
-    S.phone.show(conv, chatStore(conv).list);
+    S.convs.show(conv);
     S.phone.setChats(S.chats);
     save();
     schedulePulse(0);
   }
 
-  /** A beat came back from demo-play: its messages, its toasts, the order the recorrido follows. */
+  /** A beat came back from demo-play: its toasts, the order the recorrido follows. Its messages reach the phone
+      through the pulse it asks for (WaChats). */
   function onBeat(c, r) {
     if (!S) return;
-    keep(c.conv, r.messages);
+    var now = S.convs.played(c.conv, r, S.view);
     (r.did || []).forEach(function (d) {
       if (d.actor === 'cashier' && d.action === 'approve') S.approved[c.conv] = true;
     });
@@ -553,7 +577,7 @@
     var k = c.conv + ':' + r.beat;
     if (!S.told[k]) { S.told[k] = true; tell(r, c); }
     observe(null);
-    schedulePulse(800);
+    schedulePulse(now ? 150 : 800);
   }
 
   /**
@@ -994,8 +1018,10 @@
 
   // ------------------------------------------------------------------------------------------ pulse, toasts --
 
+  /** 2 s while a recorrido runs or the phone is on screen with chats still going; 10 s once the 12 are done. */
   function interval() {
-    return S.guest === 'whatsapp' || (S.tour && S.tour.active) ? 2000 : 10000;
+    var chatting = S.guest === 'whatsapp' && !(S.timeline && S.timeline.over());
+    return chatting || (S.tour && S.tour.active) ? 2000 : 10000;
   }
   function schedulePulse(ms) {
     if (!S || !S.sb || S.expired) return;
@@ -1009,18 +1035,14 @@
     if (s.pulsing) return schedulePulse();
     s.pulsing = true;
     clearTimeout(s.pt);
-    var conv = s.view, st = chatStore(conv);
-    s.client.pulse(s.sb, { conv: conv, cursor: st.cursor }).then(function (r) {
+    var conv = s.view;
+    s.client.pulse(s.sb, { conv: conv, cursor: s.convs.chat(conv).cursor }).then(function (r) {
       if (s !== S) return;
       s.pulsing = false;
       if (r.expires_at) s.sb.expires_at = r.expires_at;
       var wa = r.wa || {};
       // the cursor belongs to the conversation the pulse answered for (L2: wa.conv, wa.cursor, wa.messages)
-      var c = wa.conv || conv;
-      var cs = c === conv ? st : chatStore(c);
-      var cur = wa.cursor != null ? wa.cursor : r.cursor;
-      if (cur != null) cs.cursor = cur;
-      keep(c, wa.messages || r.messages);
+      s.convs.pulsed(wa.conv || conv, wa.messages || r.messages, wa.cursor != null ? wa.cursor : r.cursor, s.view);
       if (wa.chats) {
         s.chats = wa.chats;
         wa.chats.forEach(function (c) { s.stages[c.conv] = c.stage; });
@@ -1166,6 +1188,7 @@
     buildMenu: buildMenu,
     findItem: findItem,
     FramePool: FramePool,
+    WaChats: WaChats,
     frameName: frameName,
     siteUrl: siteUrl,
     address: address,

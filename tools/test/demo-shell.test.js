@@ -490,13 +490,15 @@ test("timeline: step_error retries once after 5 s, then stops that conversation;
 
 // ------------------------------------------------------------------------------------------- backend, mock --
 
-test("backend: ?backend= is read from an allow-list; unknown or unconfigured falls back to the default", () => {
+test("backend: mezzita.com runs the mezzita-demo project; ?backend= overrides it from an allow-list", () => {
+  assert.equal(api.DEFAULT_BACKEND, "demo");
+  assert.equal(api.usable("demo"), true);
+  assert.equal(api.pickBackend(""), "demo");
+  assert.equal(api.pickBackend("?backend=demo"), "demo");
   assert.equal(api.pickBackend("?backend=mock"), "mock");
   assert.equal(api.pickBackend("?rubro=bar&backend=staging"), "staging");
-  assert.equal(api.pickBackend("?backend=evil"), api.DEFAULT_BACKEND);
-  assert.equal(api.pickBackend("?backend=__proto__"), api.DEFAULT_BACKEND);
-  assert.equal(api.pickBackend("?backend=demo"), api.usable("demo") ? "demo" : api.DEFAULT_BACKEND);
-  assert.equal(api.pickBackend(""), api.DEFAULT_BACKEND);
+  assert.equal(api.pickBackend("?backend=evil"), "demo");
+  assert.equal(api.pickBackend("?backend=__proto__"), "demo");
 });
 
 test("backend: L2/L3 error codes map to the Spanish lines; play refusals stay internal", () => {
@@ -609,4 +611,69 @@ test("phone: the dot marks chats with news other than the one on screen", () => 
   const chats = [{ conv: 1, last_at: "2026-11-25T10:00:05Z" }, { conv: 2, last_at: "2026-11-25T10:00:09Z" }, { conv: 3, last_at: null }];
   assert.deepEqual(phone.unread(chats, { 2: "2026-11-25T10:00:01Z" }, 1), { 1: false, 2: true, 3: false });
   assert.deepEqual(phone.unread(chats, { 2: "2026-11-25T10:00:09Z" }, 1), { 1: false, 2: false, 3: false });
+});
+
+// Staging (check G4): demo-play answers each message with its WhatsApp message id, demo-pulse with its database row
+// id, so the same message has two ids. Rows are numbered in the order they are written.
+function stagingChats() {
+  const rows = {};
+  let n = 0;
+  return {
+    play(conv, beat) {
+      n += 1;
+      const row = { id: `row-${n}`, from: beat % 2 ? "assistant" : "guest", text: `chat ${conv}, beat ${beat}`, at: `2026-11-26T12:00:${String(n).padStart(2, "0")}Z` };
+      (rows[conv] = rows[conv] || []).push(row);
+      return { ok: true, conv, beat, messages: [{ ...row, id: `demo.sb.${conv}.${beat}` }], did: [] };
+    },
+    pulse(conv, cursor) {
+      const list = rows[conv] || [];
+      return { wa: { conv, messages: list.slice(Number(cursor) || 0), cursor: String(list.length) } };
+    },
+  };
+}
+// phone.js's contract: show() starts the chat over with the given list; add() appends each message once per id.
+function fakePhone() {
+  return {
+    shown: [],
+    ids: {},
+    show(conv, list) { this.shown = []; this.ids = {}; this.add(list); },
+    add(list) {
+      (list || []).forEach((m) => {
+        const id = m.id || `${m.from}:${m.text}:${m.at}`;
+        if (this.ids[id]) return;
+        this.ids[id] = true;
+        this.shown.push(m.text);
+      });
+    },
+  };
+}
+
+test("whatsapp: switching chats back and forth many times never shows a message twice", () => {
+  const backend = stagingChats();
+  const screen = fakePhone();
+  const convs = new shell.WaChats(screen);
+  let view = 1;
+  // the shell's own steps: pulse(), viewChat() and onBeat()
+  const pulse = () => {
+    const wa = backend.pulse(view, convs.chat(view).cursor).wa;
+    convs.pulsed(wa.conv || view, wa.messages, wa.cursor, view);
+  };
+  const viewChat = (conv) => { view = conv; convs.show(conv); pulse(); };
+  const beat = (conv, b) => { if (convs.played(conv, backend.play(conv, b), view)) pulse(); };
+
+  viewChat(1);
+  for (let b = 0; b < 5; b++) {
+    beat(1, b); // on screen
+    beat(2, b); // off screen: shown later, from the pulse
+    beat(3, b);
+    viewChat(2); viewChat(3); viewChat(1); pulse(); viewChat(2); viewChat(1);
+  }
+  for (const conv of [3, 1, 2, 1, 3]) {
+    viewChat(conv);
+    pulse();
+    assert.equal(screen.shown.length, 5, `chat ${conv} shows its 5 messages`);
+    assert.equal(new Set(screen.shown).size, 5, `chat ${conv}: none twice`);
+    assert.ok(screen.shown.every((t) => t.startsWith(`chat ${conv},`)), `chat ${conv}: only its own`);
+    assert.equal(convs.chat(conv).list.length, 5);
+  }
 });
