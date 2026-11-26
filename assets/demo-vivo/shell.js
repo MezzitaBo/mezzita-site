@@ -29,13 +29,10 @@
   var STORE = 'mezzita.demo';
   var POOL_TEAM = 3;
   var POOL_GUEST = 2;
-  // Plans the site does not offer for now (owner, 2026-11-26: food venues only, until after the summer parties). They
-  // stay in the app and in the backend's plan list; the shell shows neither them nor what only they include.
-  var HIDDEN_PLANS = ['nightlife'];
-  var PLAN_KEYS = ['arranca', 'crece', 'escala'];
+  var PLAN_KEYS = ['arranca', 'crece', 'escala', 'nightlife'];
   var LABELS = {
     cafe: 'Restaurante pequeño o café', restaurante: 'Restaurante con salón', pizzeria: 'Pizzería', foodtruck: 'Food truck',
-    heladeria: 'Heladería', bar: 'Bar con comida o gastrobar', discoteca: 'Discoteca o boliche', eventos: 'Eventos y productoras',
+    heladeria: 'Heladería', bar: 'Bar o pub', discoteca: 'Discoteca o boliche', eventos: 'Eventos y productoras',
   };
   var BUILDING = 'Armando tu demo: carta, mesas, ventas del mes, inventario y clientes de ejemplo…';
 
@@ -99,10 +96,6 @@
   function bs(cents) { return cents == null ? '' : 'Bs ' + thousands(cents / 100); }
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
 
-  /** The backend's plans the site offers (HIDDEN_PLANS left out), in the backend's order. */
-  function offered(plans) {
-    return (plans || []).filter(function (p) { return HIDDEN_PLANS.indexOf(p.key) < 0; });
-  }
   function planOf(sb, key) {
     var p = (sb.plans || []).filter(function (x) { return x.key === key; })[0];
     return p || { key: key, name: cap(key), price_cents: null };
@@ -118,8 +111,7 @@
 
   /**
    * The left menu from demo-start: modules {key: {on, plan}} decide each item. Absent = the template does not use
-   * it (hidden); on = usable; off = dimmed with the cheapest plan that has it, or hidden when only a plan the site
-   * does not offer has it (HIDDEN_PLANS). Returns [{key, title, items}].
+   * it (hidden); on = usable; off = dimmed with the cheapest plan that has it. Returns [{key, title, items}].
    */
   function buildMenu(sb) {
     var mods = sb.modules || {}, links = sb.links || {}, plans = sb.plans || [];
@@ -129,10 +121,8 @@
       var present = keys.filter(function (k) { return mods[k]; });
       if (!present.length) return null;
       if (present.some(function (k) { return mods[k].on; })) return { state: 'on' };
-      var keys = present.map(function (k) { return mods[k].plan; }).filter(Boolean);
-      var open = keys.filter(function (k) { return HIDDEN_PLANS.indexOf(k) < 0; });
-      if (keys.length && !open.length) return null; // only a plan the site does not offer has it
-      var best = open.sort(function (a, b) { return rank(a) - rank(b); })[0];
+      var best = present.map(function (k) { return mods[k].plan; }).filter(Boolean)
+        .sort(function (a, b) { return rank(a) - rank(b); })[0];
       return { state: 'locked', plan: best ? planOf(sb, best) : null };
     }
     var items = [];
@@ -976,7 +966,7 @@
     var cur = S.sb.plan;
     modal('<div class="mzd-mh"><div><b>Cambiar de plan</b><span>Vas a ver solo lo que incluye ese plan.</span></div>' +
       '<button type="button" class="mzd-x" data-act="modal-close" aria-label="Cerrar">' + icon('close') + '</button></div>' +
-      '<div class="mzd-plans">' + offered(S.sb.plans).map(function (p) {
+      '<div class="mzd-plans">' + (S.sb.plans || []).map(function (p) {
         var me = p.key === cur;
         return '<button type="button" class="mzd-plancard"' + (me ? ' aria-current="true" disabled' : ' data-plan="' + esc(p.key) + '"') + '><b>' + esc(p.name) +
           '</b><span>' + (p.price_cents != null ? bs(p.price_cents) + ' al mes' : '') + '</span><small>' + (me ? 'El que estás viendo' : 'Abrir con este plan') + '</small></button>';
@@ -1196,7 +1186,6 @@
     restart: restart,
     // pure parts, for tests
     buildMenu: buildMenu,
-    offered: offered,
     findItem: findItem,
     FramePool: FramePool,
     WaChats: WaChats,

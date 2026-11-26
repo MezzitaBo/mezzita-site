@@ -1,5 +1,5 @@
 // Screenshots and checks of the demo shell (assets/demo-vivo) at 375, 768, 1280 and 1440 px for four scenarios:
-// café on Arranca, restaurante on Crece, food truck on Escala, bar (with food) on Crece.
+// café on Arranca, restaurante on Crece, food truck on Escala, discoteca on Nightlife.
 // Checks per shot: no console errors, no horizontal scroll; at 375 px every menu item is reachable in two taps
 // («Demo», then the item); at 1440 px the WhatsApp recorrido walks end to end on the mock.
 //
@@ -23,7 +23,7 @@ const SCENARIOS = [
   { id: "cafe-arranca", template: "cafe", plan: "arranca", venues: 1 },
   { id: "restaurante-crece", template: "restaurante", plan: "crece", venues: 1 },
   { id: "foodtruck-escala", template: "foodtruck", plan: "escala", venues: 3 },
-  { id: "bar-crece", template: "bar", plan: "crece", venues: 1 },
+  { id: "discoteca-nightlife", template: "discoteca", plan: "nightlife", venues: 1 },
 ].filter((s) => !ONLY || s.id.startsWith(ONLY));
 const SIZES = [[375, 812], [768, 1024], [1280, 800], [1440, 900]];
 const FILES = ["api.js", "phone.js", "tours.js", "shell.js"];

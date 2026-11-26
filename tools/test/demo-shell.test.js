@@ -47,27 +47,20 @@ test("menu: discoteca on Noche opens entries, the door and the bar; entry carrie
   assert.equal(it.table.state, "on");
 });
 
-test("menu: a bar on Crece leaves out what only Noche has (door, entries, tickets); no item offers Noche", async () => {
-  const menu = shell.buildMenu(await build("bar", "crece"));
-  const it = items(menu);
-  assert.equal(it.door, undefined);
-  assert.equal(it.entry, undefined);
-  assert.equal(it.tickets, undefined);
+test("menu: a bar on Crece dims the door and entries with the backend's name for nightlife, «Noche»", async () => {
+  const it = items(shell.buildMenu(await build("bar", "crece")));
+  assert.equal(it.door.state, "locked");
+  assert.equal(it.door.plan.key, "nightlife");
+  assert.equal(it.tickets.state, "locked");
+  assert.equal(it.tickets.plan.name, "Noche");
+  assert.equal(it.tickets.plan.price_cents, 150000);
   assert.equal(it.reserve.state, "on");
-  const plans = menu.flatMap((g) => g.items).map((i) => i.plan && i.plan.key).filter(Boolean);
-  assert.ok(!plans.includes("nightlife"), plans.join());
-});
-
-test("plans: the site offers Arranca, Crece and Escala; a Noche request opens Crece (owner, 2026-11-26)", () => {
-  assert.deepEqual(shell.offered(api.PLANS).map((p) => p.key), ["arranca", "crece", "escala"]);
-  assert.equal(shell.normalize({ template: "bar", plan: "nightlife" }).plan, "crece");
-  assert.equal(shell.normalize({ template: "bar", plan: "escala" }).plan, "escala");
 });
 
 test("menu: absent module hides, on without a link hides, a role without a member hides", () => {
   const sb = {
     plans: api.PLANS,
-    modules: { menu: { on: true, plan: "arranca" }, tables: { on: true, plan: "crece" }, door: { on: false, plan: "escala" }, wristbands: { on: false, plan: "escala" } },
+    modules: { menu: { on: true, plan: "arranca" }, tables: { on: true, plan: "crece" }, door: { on: false, plan: "nightlife" }, wristbands: { on: false, plan: "nightlife" } },
     links: { menu: "/m/a/b" },
     seats: [{ role: "owner" }, { role: "cashier" }],
     has_bar: false,
@@ -77,14 +70,10 @@ test("menu: absent module hides, on without a link hides, a role without a membe
   assert.equal(it.menu.state, "on");
   assert.equal(it.table, undefined, "tables on but no table link was built → hidden");
   assert.equal(it.entry.state, "locked", "door and wristbands both off → locked");
-  assert.equal(it.entry.plan.key, "escala");
+  assert.equal(it.entry.plan.key, "nightlife");
   assert.equal(it.admin, undefined, "no admin member");
   assert.equal(it.owner.state, "on");
   assert.equal(it.door.state, "locked", "a locked role needs no member");
-  // the same modules when only Noche has them: not shown at all
-  const night = items(shell.buildMenu({ ...sb, modules: { ...sb.modules, door: { on: false, plan: "nightlife" }, wristbands: { on: false, plan: "nightlife" } } }));
-  assert.equal(night.entry, undefined);
-  assert.equal(night.door, undefined);
 });
 
 test("menu: the cheapest plan follows the backend's plan order; a module no plan has gets no chip", () => {
