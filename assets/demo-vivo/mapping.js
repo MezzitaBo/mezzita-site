@@ -1,27 +1,23 @@
 /* Mezzita · demo en vivo: respuestas del asistente → plantilla, plan, locales y el porqué.
    Función pura (sin DOM). Reglas de docs/demo-vivo.md §2, en orden; gana la primera que aplica:
-   1. discoteca, eventos, o «Eventos con entrada» → nightlife (2 locales si tiene varios).
-   2. «Dos o tres» o «Más de tres» locales → escala, 3 locales.
-   3. mesas o reservas, o lleva inventario → crece.
-   4. si no → arranca.
-   Un plan elegido a mano (chip o ?plan=) reemplaza al recomendado. */
+   1. «Dos o tres» o «Más de tres» locales → escala, 3 locales.
+   2. mesas o reservas, o lleva inventario → crece.
+   3. si no → arranca.
+   Un plan elegido a mano (chip o ?plan=) reemplaza al recomendado.
+   Solo locales de comida (dueño, 2026-11-26): los demás tipos y planes siguen en la app, el sitio no los ofrece. */
 (function (root) {
   'use strict';
 
-  var TEMPLATES = ['cafe', 'restaurante', 'pizzeria', 'foodtruck', 'heladeria', 'bar', 'discoteca', 'eventos'];
-  var PLANS = ['arranca', 'crece', 'escala', 'nightlife'];
+  var TEMPLATES = ['cafe', 'restaurante', 'pizzeria', 'foodtruck', 'heladeria', 'bar'];
+  var PLANS = ['arranca', 'crece', 'escala'];
   var LOCALES = ['uno', 'dos-tres', 'mas'];
-  var ATIENDE = ['mostrador', 'mesas', 'reservas', 'delivery', 'eventos'];
+  var ATIENDE = ['mostrador', 'mesas', 'reservas', 'delivery'];
   var INVENTARIO = ['no', 'cuaderno', 'receta'];
-  var NIGHT = { discoteca: 1, eventos: 1 };
-  // «Eventos con entrada» solo se ofrece a bares y restaurantes con salón.
-  var EVENTS_OPTION = { bar: 1, restaurante: 1 };
 
   var PLAN_LINE = {
     arranca: 'Menú web, pedidos, caja y WhatsApp para vender desde el primer día.',
     crece: 'Suma mesas con QR, plano de mesas, reservas e inventario por receta.',
-    escala: 'Hasta 3 locales en un solo panel, con su caja y su inventario cada uno.',
-    nightlife: 'Entradas, puerta, manillas con saldo y mesas VIP en el mismo panel que tu barra.'
+    escala: 'Hasta 3 locales en un solo panel, con su caja y su inventario cada uno.'
   };
 
   function has(list, v) { return list.indexOf(v) !== -1; }
@@ -32,14 +28,13 @@
     return parts.slice(0, -1).join(', ') + ' y ' + parts[parts.length - 1];
   }
 
-  /** Respuestas limpias: lo desconocido se descarta, «Eventos con entrada» solo donde se ofrece. */
+  /** Respuestas limpias: lo desconocido se descarta. */
   function normalize(a) {
     a = a || {};
     var rubro = has(TEMPLATES, a.rubro) ? a.rubro : null;
     var atiende = (Array.isArray(a.atiende) ? a.atiende : []).filter(function (x, i, arr) {
-      return has(ATIENDE, x) && arr.indexOf(x) === i && (x !== 'eventos' || EVENTS_OPTION[rubro]);
+      return has(ATIENDE, x) && arr.indexOf(x) === i;
     });
-    if (rubro && NIGHT[rubro]) atiende = [];
     return {
       rubro: rubro,
       locales: has(LOCALES, a.locales) ? a.locales : null,
@@ -49,22 +44,13 @@
     };
   }
 
-  function venuesFor(plan, multi) {
-    if (plan === 'escala') return 3;
-    if (plan === 'nightlife') return multi ? 2 : 1;
-    return 1;
+  function venuesFor(plan) {
+    return plan === 'escala' ? 3 : 1;
   }
 
   function recommend(a) {
     var multi = a.locales === 'dos-tres' || a.locales === 'mas';
     var truck = a.rubro === 'foodtruck';
-    if ((a.rubro && NIGHT[a.rubro]) || has(a.atiende, 'eventos')) {
-      var why = a.rubro === 'discoteca' ? 'vendes entradas, controlas la puerta y cobras con manillas'
-        : a.rubro === 'eventos' ? 'vendes entradas y controlas el ingreso en cada evento'
-        : 'haces eventos con entrada';
-      if (multi) why += ', en más de un local';
-      return { plan: 'nightlife', reason: 'Porque ' + why + '.' };
-    }
     if (multi) {
       var what = truck ? (a.locales === 'mas' ? 'más de tres trucks' : 'varios trucks')
         : (a.locales === 'mas' ? 'más de tres locales' : 'dos o tres locales');
@@ -96,7 +82,6 @@
    */
   function mapAnswers(answers, chosen) {
     var a = normalize(answers);
-    var multi = a.locales === 'dos-tres' || a.locales === 'mas';
     var rec = recommend(a);
     var recommended = a.plan || rec.plan;
     var reason = a.plan && a.plan !== rec.plan ? PLAN_LINE[a.plan] : rec.reason;
@@ -104,15 +89,15 @@
     return {
       template: a.rubro || 'restaurante',
       plan: plan,
-      venues: venuesFor(plan, multi),
+      venues: venuesFor(plan),
       reason: reason,
       recommended: recommended
     };
   }
 
-  /** Paso 3 no aplica a discotecas ni productoras. */
-  function stepsFor(rubro) {
-    return NIGHT[rubro] ? [1, 2, 4] : [1, 2, 3, 4];
+  /** Los cuatro pasos, para todo local de comida. */
+  function stepsFor() {
+    return [1, 2, 3, 4];
   }
 
   var api = {
@@ -120,7 +105,7 @@
     normalize: normalize,
     stepsFor: stepsFor,
     TEMPLATES: TEMPLATES, PLANS: PLANS, LOCALES: LOCALES, ATIENDE: ATIENDE, INVENTARIO: INVENTARIO,
-    EVENTS_OPTION: EVENTS_OPTION, PLAN_LINE: PLAN_LINE
+    PLAN_LINE: PLAN_LINE
   };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.MezzitaMapping = api;

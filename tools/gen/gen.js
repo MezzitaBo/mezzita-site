@@ -111,13 +111,13 @@ ${item(4, "El QR de cobro de tu banco", "Una captura del QR de la cuenta donde q
 const blank = (w) => `<span style="display:inline-block;width:${w}px;border-bottom:1.5px solid var(--ink)"></span>`;
 const box = `<i style="display:inline-block;width:11px;height:11px;border:1.5px solid var(--ink);border-radius:2px;vertical-align:-1px;margin-right:5px"></i>`;
 const CONTRATO = page(`
-<div class="hd">${brand(19)}<small>Contrato modelo · Pedidos con QR · v5 · noviembre 2026</small></div>
+<div class="hd">${brand(19)}<small>Contrato modelo · Pedidos con QR · v4 · octubre 2026</small></div>
 <h1 style="font-size:21pt;margin-bottom:12px">Contrato de servicio «Pedidos con QR por Mezzita»</h1>
 <p style="background:#FFF6D6;border-left:4px solid var(--sun);padding:10px 14px;font-size:9.5pt">Este es el modelo que firmamos con cada local. Los datos entre líneas se completan con los tuyos. Si algo no está escrito aquí o en la página de planes del día de tu contratación, no está incluido. Léelo con calma: lo escribimos para que se entienda sin abogado.</p>
 <h2>1. Partes</h2>
 <p><b>El proveedor:</b> Mezzita, razón social ${blank(170)}, NIT ${blank(110)}, WhatsApp +591 62506518, hola@mezzita.com, mezzita.com.</p>
 <p style="margin-top:8px"><b>El cliente:</b> ${blank(170)}, con NIT o CI ${blank(150)}, titular del local ${blank(150)}, en la ciudad de ${blank(150)}.</p>
-<p style="margin-top:8px"><b>Plan:</b> ${box}Arranca ${box}Crece ${box}Escala ${box}Noche &nbsp;&nbsp; <b>Modalidad:</b> ${box}Mes a mes ${box}Contrato de 12 meses</p>
+<p style="margin-top:8px"><b>Plan:</b> ${box}Arranca ${box}Crece ${box}Escala &nbsp;&nbsp; <b>Modalidad:</b> ${box}Mes a mes ${box}Contrato de 12 meses</p>
 <h2>2. Objeto</h2>
 <p>Mezzita entrega y mantiene para el local un sistema de pedidos compuesto por:</p>
 <ul><li>Menú web propio con fotos, variantes y notas, donde el cliente final arma su pedido.</li>
@@ -128,7 +128,7 @@ const CONTRATO = page(`
 <li>Reseñas: QR imprimible para el mostrador que lleva a las reseñas de Google del local, y mensaje por WhatsApp con el enlace después de la comida a todos los clientes finales que dieron permiso, sin premios ni filtros.</li>
 <li>Cambios de carta ilimitados desde el panel, más los cambios hechos por Mezzita que indica el plan (sección 3), cada uno en 1 día hábil.</li>
 <li>Reporte mensual de una página y soporte por WhatsApp con una persona.</li>
-<li><b>Crece</b> suma que la mesa pague su cuenta desde el celular, con confirmación de la caja, y reservas desde un enlace en el menú web. <b>Escala</b> suma hasta 3 sucursales con menú central y caja consolidada, reporte avanzado, factura electrónica del SIN mediante un proveedor certificado que se cobra aparte al costo, y gerente de cuenta con revisión mensual de 30 minutos y soporte prioritario. <b>Noche</b>, para discotecas y eventos, suma eventos y venta de entradas, relacionadores, puerta con carnet y lista de veto, y manillas con saldo.</li></ul>
+<li><b>Crece</b> suma que la mesa pague su cuenta desde el celular, con confirmación de la caja, y reservas desde un enlace en el menú web. <b>Escala</b> suma hasta 3 sucursales con menú central y caja consolidada, reporte avanzado, factura electrónica del SIN mediante un proveedor certificado que se cobra aparte al costo, y gerente de cuenta con revisión mensual de 30 minutos y soporte prioritario.</li></ul>
 <p><b>No incluido:</b> gestión de la ficha de Google Maps del cliente (Mezzita no entra a su cuenta de Google ni la configura; entrega el QR de reseñas y el enlace del menú con un video de cómo ponerlos), impresora térmica, repartidores, impresión de QR y acrílicos, factura electrónica en Arranca y Crece (se cotiza aparte), conectores a POS o contabilidad (se cotizan aparte), fotos de estudio con IA (opcional, 585 Bs por 15 platos), anuncios y redes sociales.</p>
 <h2>3. Precio</h2>
 <table style="width:100%;border-collapse:collapse;font-size:9.5pt" border="1" cellpadding="8">
@@ -138,7 +138,6 @@ const CONTRATO = page(`
 <tr><td>Comisión por pedido (mesa, mostrador, para llevar y a domicilio)</td><td>0 %</td><td>0 %</td><td>0 %</td></tr>
 <tr><td>Saldo inicial de promociones por WhatsApp (vence a los ${PRECIOS.promo_days} días)</td><td>${PRECIOS.promo_arranca} Bs</td><td>${PRECIOS.promo_crece} Bs</td><td>${PRECIOS.promo_crece} Bs</td></tr>
 <tr><td>Cambios de carta hechos por Mezzita, al mes</td><td>2</td><td>4</td><td>Ilimitados</td></tr></table>
-<p style="margin-top:8px"><b>Plan Noche</b> (discotecas y eventos): instalación de ${PRECIOS.install} Bs, mensualidad de ${PRECIOS.plan_nightlife} Bs por adelantado y 0 % de comisión por pedido. Las manillas físicas se cobran aparte, por unidad.</p>
 <ul style="margin-top:6px"><li>Los precios son en bolivianos e incluyen IVA.</li>
 <li>Mezzita no cobra comisión por pedido: 0 % en la mesa, en el mostrador, para llevar y a domicilio. El cliente final paga con el QR del banco del local o en efectivo; el dinero va directo a la cuenta del local y su caja confirma cada pago en el panel.</li>
 <li>Promociones por WhatsApp: solo a clientes finales que dieron permiso al pedir. Recargas a ${PRECIOS.wa_msg} Bs por mensaje entregado, en paquetes de ${PRECIOS.wa_pack_msgs} (${PRECIOS.wa_pack} Bs). El saldo vencido o no usado no se devuelve.</li>

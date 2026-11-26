@@ -1566,7 +1566,7 @@ main>.night{border-radius:clamp(1.4rem,3vw,2.6rem);margin-inline:max(8px,env(saf
 .tier .ideal ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.35rem}
 .tier .ideal li{background:var(--paper);border:1px solid var(--line-2);border-radius:999px;padding:.25rem .65rem;font-size:.8rem;color:var(--ink)}
 .tier.main .ideal li{background:var(--sun);border-color:var(--ink)}
-/* Precios v2: cartas de planes (Arranca, Crece, Escala). Progresión visual claro → amarillo → noche. */
+/* Precios v2: cartas de planes (Arranca, Crece, Escala). Progresión visual claro → amarillo → oscuro. */
 .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr));gap:1.25rem;align-items:stretch}
 .plan{position:relative;display:flex;flex-direction:column;gap:1rem;background:var(--surface);border:1.5px solid var(--line-2);border-radius:24px;padding:1.5rem 1.4rem 1.4rem}
 .plan-2{border:2px solid var(--ink);box-shadow:.55rem .55rem 0 var(--sun)}
@@ -1741,9 +1741,8 @@ main>section[id]{scroll-margin-top:var(--hd-h)}
 .camp-segs li{font:500 .85rem/1 var(--f-body);padding:.55rem .95rem;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2);transition:background var(--t-fast) ease,color var(--t-fast) ease,border-color var(--t-fast) ease}
 .camp-segs li.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .camp-stats{padding-top:1rem;border-top:1px solid var(--line)}
-.fn-noche{margin-bottom:1.5rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr))}
-.fn-noche .benefit h3{font-size:var(--step-0)}
-.fn-noche-tags{margin-bottom:1rem}
+.fn-locales{margin-bottom:1.5rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr))}
+.fn-locales .benefit h3{font-size:var(--step-0)}
 .benefits.mini{grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:1rem}
 .benefits.mini .bi{width:2.4rem;height:2.4rem}
 .benefits.mini .bi svg{width:1.2rem;height:1.2rem}
